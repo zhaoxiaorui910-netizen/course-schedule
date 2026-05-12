@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>课程表</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root {
+    --primary: #e8e8e8;
+    --bg: transparent;
+    --card-bg: rgba(255,255,255,0.60);
+    --text: #1d1d1f;
+    --text-secondary: #86868b;
+    --border: rgba(0,0,0,0.06);
+    --header-height: 52px;
+    --nav-height: 44px;
+    --cell-min-height: 48px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(180deg, #f5f6fa 0%, #ebedf3 100%);
+    color: var(--text);
+    font-size: 14px;
+    overflow-x: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 白色噪点纹理 */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    background-repeat: repeat;
+}
+
+/* 顶栏 */
+.header {
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    color: var(--text);
+    padding: 0 16px;
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.5);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+.header-title {
+    font-size: 16px;
+    font-weight: 600;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.header-actions { display: flex; gap: 8px; }
+.header-btn {
+    background: rgba(0,0,0,0.05);
+    border: none;
+    color: var(--text);
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.header-btn:active { background: rgba(0,0,0,0.1); }
+
+/* 周导航 */
+.week-nav {
+    background: rgba(255,255,255,0.35);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    height: var(--nav-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+    flex-shrink: 0;
+    position: sticky;
+    top: var(--header-height);
+    z-index: 9;
+}
+.week-nav-btn {
+    background: rgba(255,255,255,0.5);
+    border: none;
+    border-radius: 8px;
+    height: 32px;
+    padding: 0 12px;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+.week-nav-btn:active { background: rgba(255,255,255,0.8); }
+.week-info {
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.today-btn {
+    background: #1d1d1f;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+}
+.today-btn:active { opacity: .8; }
+
+/* 课表容器 */
+.schedule-wrapper {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.slide-viewport {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+}
+.desktop-layout {
+    height: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.layout-row {
+    display: flex;
+    align-items: flex-start;
+    min-height: 100%;
+}
+
+/* 固定左侧：节次列 */
+.period-col {
+    flex-shrink: 0;
+    width: 52px;
+    position: sticky;
+    left: 0;
+    z-index: 3;
+}
+.period-col-header {
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: rgba(245,246,250,0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0,0,0,0.03);
+}
+.period-item {
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.25);
+    border-bottom: 1px solid rgba(0,0,0,0.008);
+}
+.period-item .period-num {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 12px;
+    line-height: 1.2;
+}
+.period-item .period-time {
+    font-size: 10px;
+    color: var(--text-secondary);
+    line-height: 1.2;
+}
+
+/* 右侧列 */
+.right-col {
+    flex: 1;
+    min-width: 0;
+}
+
+/* 固定顶部：日期表头 */
+.schedule-header {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: rgba(255,255,255,0.45);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    text-align: center;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.03);
+}
+.schedule-header .day-date {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    display: block;
+}
+
+/* 滑动容器（隐藏水平溢出的课程网格） */
+.slide-clip {
+    overflow: hidden;
+}
+
+/* 课程网格（滑动的核心元素） */
+.slide-track {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: 60px;
+    will-change: transform;
+    backface-visibility: hidden;
+    will-change: transform;
+}
+
+/* 课程网格单元格 */
+.course-cell {
+    background: rgba(255,255,255,0.3);
+    border-bottom: 1px solid rgba(0,0,0,0.008);
+    border-right: 1px solid rgba(0,0,0,0.008);
+    padding: 1px;
+    position: relative;
+}
+.course-cell.empty {
+    background: rgba(245,246,248,0.2);
+}
+.course-cell.weekend {
+    background: rgba(250,250,250,0.15);
+}
+.course-cell.empty.weekend {
+    background: rgba(235,236,238,0.15);
+}
+
+/* 课程卡片 */
+.course-card {
+    border-radius: 10px;
+    padding: 4px 6px;
+    color: #fff;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    position: relative;
+    transition: opacity .15s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.2);
+    border: 0.5px solid rgba(255,255,255,0.3);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    text-align: center;
+    overflow: hidden;
+}
+.course-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.05) 70%, rgba(255,255,255,0.12) 100%);
+    pointer-events: none;
+}
+.course-card:active { opacity: .85; }
+
+/* 角标：表示该时段还有非本周课程 */
+.slot-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.15) 60%);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: rgba(255,255,255,0.95);
+    font-size: 8px;
+    font-weight: 700;
+    min-width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    line-height: 14px;
+    text-align: center;
+    padding: 0 3px;
+    border: 0.5px solid rgba(255,255,255,0.5);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.5);
+    pointer-events: none;
+}
+
+/* 时段详情的课程卡片 */
+.slot-detail-card {
+    border-radius: 10px;
+    padding: 16px;
+    color: #fff;
+    margin-bottom: 14px;
+}
+.slot-detail-card:last-child { margin-bottom: 0; }
+.slot-detail-card.inactive { background: #b0b0b0 !important; }
+.slot-detail-name { font-size: 17px; font-weight: 600; margin-bottom: 10px; }
+.slot-detail-info { font-size: 14px; opacity: .92; margin-bottom: 4px; }
+.slot-detail-status {
+    font-size: 12px;
+    margin-top: 8px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    background: rgba(0,0,0,.18);
+}
+.slot-detail-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+}
+.slot-detail-actions button {
+    flex: 1;
+    height: 38px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #fff;
+}
+.slot-detail-actions .edit-btn { background: rgba(255,255,255,.22); }
+.slot-detail-actions .edit-btn:active { background: rgba(255,255,255,.35); }
+.slot-detail-actions .delete-btn { background: rgba(255,60,60,.35); }
+.slot-detail-actions .delete-btn:active { background: rgba(255,60,60,.5); }
+.course-card .course-name {
+    font-weight: 600;
+    font-size: 11px;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+.course-card .course-location {
+    font-size: 10px;
+    opacity: .9;
+    margin-top: 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 底部操作栏 */
+.action-bar {
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,0.5);
+    padding: 10px 16px;
+    padding-bottom: calc(10px + var(--safe-bottom));
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+}
+.action-btn {
+    flex: 1;
+    height: 40px;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: var(--text);
+}
+.action-btn.primary { background: #1d1d1f; color: #fff; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.action-btn:active { opacity: .7; }
+
+/* 模态框 */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .25s ease, visibility .25s ease;
+}
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+.modal {
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    width: 100%;
+    max-width: 420px;
+    border-radius: 16px 16px 0 0;
+    padding: 20px;
+    max-height: 85vh;
+    overflow-y: auto;
+    border: 1px solid rgba(255,255,255,0.5);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+    transform: translateY(100%);
+    transition: transform .3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.modal-overlay.active .modal {
+    transform: translateY(0);
+}
+
+.modal-title {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-align: center;
+}
+.modal-close {
+    float: right;
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+/* 表单 */
+.form-group { margin-bottom: 14px; }
+.form-label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+.form-input, .form-select {
+    width: 100%;
+    height: 40px;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 8px;
+    padding: 0 12px;
+    font-size: 15px;
+    background: rgba(255,255,255,0.5);
+    color: var(--text);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+.form-input:focus, .form-select:focus {
+    outline: none;
+    border-color: #c7c7cc;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+}
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.form-submit {
+    width: 100%;
+    height: 44px;
+    background: var(--primary);
+    color: var(--text);
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.form-submit:active { opacity: .8; }
+
+/* 课程详情 */
+.course-detail-item {
+    display: flex;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+.course-detail-item:last-child { border-bottom: none; }
+.detail-label {
+    width: 60px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+.detail-value { font-size: 14px; }
+.detail-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+.detail-actions button { flex: 1; }
+
+/* 颜色标记预览 */
+.color-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+/* 空状态 */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+}
+.empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; }
+
+/* 加载/错误 */
+.toast {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    z-index: 200;
+    display: none;
+    white-space: nowrap;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+.toast.show { display: block; animation: fadeInOut 2s ease; }
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+    15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+}
+
+/* 周末列视觉区分 */
+.day-header { border: 1.5px solid transparent; }
+.day-header.weekend { color: #999; }
+.day-header.today { background: #d4d6e0; border-color: rgba(255,255,255,0.85); border-radius: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3); }
+
+/* 加载 spinner */
+.spinner {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: #8e8e93;
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 上传区域 */
+.upload-area {
+    border: 2px dashed rgba(0,0,0,0.1);
+    border-radius: 12px;
+    padding: 24px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    background: rgba(255,255,255,0.3);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+.upload-area:hover {
+    border-color: #c7c7cc;
+    background: rgba(255,255,255,0.45);
+}
+.upload-area:active { background: rgba(255,255,255,0.5); }
+
+/* 横屏优化 */
+@media (min-width: 768px) {
+    .period-col { width: 70px; }
+    .course-card .course-name { font-size: 13px; }
+}
+/* ===== 移动端自适应 ===== */
+.mobile-layout { display: none; }
+
+.day-tabs {
+	display: flex;
+	gap: 4px;
+	padding: 8px 8px;
+	background: #fff;
+	border-bottom: 1px solid var(--border);
+	flex-shrink: 0;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+.day-tab {
+	flex: 1;
+	min-width: 0;
+	text-align: center;
+	padding: 6px 0;
+	border-radius: 8px;
+	font-size: 13px;
+	font-weight: 500;
+	background: #f0f1f3;
+	color: var(--text-secondary);
+	cursor: pointer;
+	user-select: none;
+	-webkit-tap-highlight-color: transparent;
+	transition: all .15s;
+}
+.day-tab:active { opacity: .7; }
+.day-tab .dow { display: block; font-size: 13px; line-height: 1.4; }
+.day-tab .date-num { display: block; font-size: 10px; opacity: .65; margin-top: 1px; }
+.day-tab.active { background: var(--primary); color: var(--text); font-weight: 600; }
+.day-tab.active .date-num { opacity: .8; }
+.day-tab.today { border: 1.5px solid #c7c7cc; color: #8e8e93; background: #f0f0f0; }
+.day-tab.active.today { background: var(--primary); color: var(--text); border-color: transparent; }
+
+.mobile-timeline {
+	flex: 1;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+}
+.tl-wrapper {
+	display: flex;
+	background: #fff;
+}
+.tl-labels {
+	width: 52px;
+	flex-shrink: 0;
+	background: #fafafa;
+	border-right: 1px solid #eee;
+}
+.tl-label {
+	height: 50px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	border-bottom: 1px solid #eee;
+	text-align: center;
+}
+.tl-label .num { font-weight: 600; color: #333; font-size: 12px; line-height: 1.3; }
+.tl-label .time { font-size: 9px; color: var(--text-secondary); line-height: 1.2; }
+.tl-courses {
+	flex: 1;
+	position: relative;
+}
+.tl-course {
+	position: absolute;
+	left: 2px;
+	right: 2px;
+	border-radius: 6px;
+	padding: 4px 8px;
+	color: #fff;
+	cursor: pointer;
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	overflow: hidden;
+}
+.tl-course:active { opacity: .85; }
+.tl-course .name {
+	font-weight: 600; font-size: 13px;
+	overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3;
+}
+.tl-course .loc {
+	font-size: 11px; opacity: .9;
+	overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px;
+}
+.tl-badge {
+    display: inline-block; font-size: 10px; background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    border: 0.5px solid rgba(255,255,255,0.4);
+    border-radius: 8px; padding: 0 7px; margin-top: 2px; align-self: flex-start;
+}
+.tl-empty {
+	padding: 60px 20px; text-align: center; color: var(--text-secondary); font-size: 14px;
+}
+
+@media (max-width: 599px) {
+	.mobile-layout { display: none; }
+	.period-col { width: 42px; }
+	.period-col-header { height: 36px; font-size: 10px; padding: 0 1px; }
+	.period-item .period-num { font-size: 10px; }
+	.period-item .period-time { font-size: 9px; white-space: normal; line-height: 1.2; }
+	.schedule-header { padding: 4px 0; font-size: 11px; }
+	.schedule-header .day-date { font-size: 9px; }
+	.course-card { padding: 3px; border-radius: 8px; }
+	.slot-badge { top: 1px; right: 1px; font-size: 7px; min-width: 12px; height: 12px; line-height: 12px; border-radius: 6px; padding: 0 2px; background: linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.1) 60%); border: 0.5px solid rgba(255,255,255,0.5); box-shadow: 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.4); }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-title" id="headerTitle">课程表</div>
+    <div class="header-actions">
+        <button class="header-btn" onclick="showImportModal()" title="导入课表">⬇</button>
+        <button class="header-btn" onclick="showSettings()" title="设置">⚙</button>
+    </div>
+</div>
+
+<div class="week-nav">
+    <button class="week-nav-btn" onclick="changeWeek(-1)">‹</button>
+    <div class="week-info">
+        <span id="weekLabel">第 1 周</span>
+        <button class="today-btn" id="todayBtn" onclick="goToToday()">今天</button>
+    </div>
+    <button class="week-nav-btn" onclick="changeWeek(1)">›</button>
+</div>
+
+<div class="schedule-wrapper">
+    <div class="slide-viewport">
+        <div class="desktop-layout" id="desktopView">
+            <div class="layout-row">
+                <div class="period-col" id="periodCol">
+                    <div class="period-col-header">节次</div>
+                    <div class="period-col-body" id="periodColBody"></div>
+                </div>
+                <div class="right-col">
+                    <div class="schedule-header" id="scheduleHeader"></div>
+                    <div class="slide-clip">
+                        <div class="slide-track" id="courseTrack"></div>
+                        <div id="scheduleContainer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mobile-layout" id="mobileView">
+        <div class="day-tabs" id="dayTabs"></div>
+        <div class="mobile-timeline" id="mobileTimeline"></div>
+    </div>
+</div>
+
+<div class="action-bar">
+    <button class="action-btn" onclick="showAddCourse()">✚ 添加课程</button>
+    <button class="action-btn primary" onclick="showImportModal()">📥 导入课表</button>
+</div>
+
+<!-- 添加/编辑课程弹窗 -->
+<div class="modal-overlay" id="formModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('formModal')">×</button>
+        <div class="modal-title" id="formTitle">添加课程</div>
+        <form id="courseForm" onsubmit="saveCourse(event)">
+            <input type="hidden" id="editCourseId" value="">
+            <div class="form-group">
+                <label class="form-label">课程名称</label>
+                <input class="form-input" id="formName" required placeholder="如：高等数学">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">教师</label>
+                    <input class="form-input" id="formTeacher" placeholder="选填">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">地点</label>
+                    <input class="form-input" id="formLocation" placeholder="选填">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">星期</label>
+                    <select class="form-select" id="formDay">
+                        <option value="1">周一</option>
+                        <option value="2">周二</option>
+                        <option value="3">周三</option>
+                        <option value="4">周四</option>
+                        <option value="5">周五</option>
+                        <option value="6">周六</option>
+                        <option value="7">周日</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">上课周数</label>
+                    <div class="form-row">
+                        <input class="form-input" id="formStartWeek" type="number" value="1" min="1" placeholder="起">
+                        <input class="form-input" id="formEndWeek" type="number" value="18" min="1" placeholder="止">
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">开始节次</label>
+                    <select class="form-select" id="formStartPeriod">
+                        <option value="1">第1节</option>
+                        <option value="2">第2节</option>
+                        <option value="3">第3节</option>
+                        <option value="4">第4节</option>
+                        <option value="5">第5节</option>
+                        <option value="6">第6节</option>
+                        <option value="7">第7节</option>
+                        <option value="8">第8节</option>
+                        <option value="9">第9节</option>
+                        <option value="10">第10节</option>
+                        <option value="11">第11节</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">结束节次</label>
+                    <select class="form-select" id="formEndPeriod">
+                        <option value="1">第1节</option>
+                        <option value="2">第2节</option>
+                        <option value="3">第3节</option>
+                        <option value="4">第4节</option>
+                        <option value="5">第5节</option>
+                        <option value="6">第6节</option>
+                        <option value="7">第7节</option>
+                        <option value="8">第8节</option>
+                        <option value="9">第9节</option>
+                        <option value="10">第10节</option>
+                        <option value="11">第11节</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">单双周</label>
+                <select class="form-select" id="formWeekType">
+                    <option value="">每周</option>
+                    <option value="odd">单周</option>
+                    <option value="even">双周</option>
+                </select>
+            </div>
+            <button class="form-submit" type="submit">保存</button>
+        </form>
+    </div>
+</div>
+
+<!-- 导入弹窗 -->
+<div class="modal-overlay" id="importModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('importModal')">×</button>
+        <div class="modal-title">导入课表</div>
+
+        <!-- 自动导入 - 账号密码 -->
+        <div id="loginFormSection">
+            <p style="text-align:center;color:var(--text-secondary);margin-bottom:12px;font-size:14px;">
+                方式一：自动登录教务处导入
+            </p>
+            <form onsubmit="importSchedule(event)">
+                <div class="form-group">
+                    <label class="form-label">学号</label>
+                    <input class="form-input" id="loginUsername" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">密码</label>
+                    <input class="form-input" id="loginPassword" type="password" required>
+                </div>
+                <button class="form-submit" type="submit" id="importBtn">登录并导入</button>
+            </form>
+        </div>
+
+        <!-- MFA 验证码输入 -->
+        <div id="mfaSection" style="display:none;">
+            <p style="text-align:center;color:var(--text-secondary);margin-bottom:8px;font-size:14px;">
+                📱 需要短信验证码
+            </p>
+            <p style="text-align:center;color:var(--text-secondary);margin-bottom:12px;font-size:13px;">
+                验证码已发送到你的手机，请输入
+            </p>
+            <form onsubmit="submitMfaCode(event)">
+                <div class="form-group">
+                    <label class="form-label">短信验证码</label>
+                    <input class="form-input" id="mfaCode" type="text" inputmode="numeric" required placeholder="输入6位验证码">
+                </div>
+                <button class="form-submit" type="submit" id="mfaBtn">验证并导入</button>
+            </form>
+        </div>
+
+        <!-- 导入状态 -->
+        <div id="importStatus" style="display:none;margin-top:16px;text-align:center;">
+            <div class="spinner" id="importSpinner"></div>
+            <p id="importStatusText" style="font-size:14px;color:var(--text-secondary);margin-top:8px;">处理中...</p>
+            <p id="importError" style="font-size:13px;color:#e74c3c;margin-top:8px;display:none;"></p>
+        </div>
+
+        <div style="margin:20px 0;border-top:1px solid var(--border);text-align:center;position:relative;">
+            <span style="position:relative;top:-10px;background:var(--card-bg);padding:0 12px;color:var(--text-secondary);font-size:13px;">或者</span>
+        </div>
+
+        <!-- 手动上传 -->
+        <p style="text-align:center;color:var(--text-secondary);margin-bottom:12px;font-size:14px;">
+            方式二：手动上传已保存的课表 HTML
+        </p>
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('htmlFileInput').click()">
+            <div style="font-size:36px;color:var(--text-secondary);margin-bottom:8px;">📄</div>
+            <p style="font-size:14px;color:var(--text-secondary);">点击选择教务系统的课表 HTML 文件</p>
+            <p style="font-size:12px;color:#bbb;margin-top:4px;">在浏览器中打开课表页面 → 另存为 → 选择此文件</p>
+            <input type="file" id="htmlFileInput" accept=".html,.htm" style="display:none" onchange="uploadHtmlFile(event)">
+        </div>
+        <div id="uploadStatus" style="display:none;margin-top:12px;text-align:center;">
+            <div class="spinner" id="uploadSpinner"></div>
+            <p id="uploadStatusText" style="font-size:14px;color:var(--text-secondary);margin-top:8px;">解析中...</p>
+            <p id="uploadError" style="font-size:13px;color:#e74c3c;margin-top:8px;display:none;"></p>
+        </div>
+
+        <div style="margin:20px 0;border-top:1px solid var(--border);text-align:center;position:relative;">
+            <span style="position:relative;top:-10px;background:var(--card-bg);padding:0 12px;color:var(--text-secondary);font-size:13px;">或者</span>
+        </div>
+
+        <!-- 粘贴 HTML 导入 -->
+        <p style="text-align:center;color:var(--text-secondary);margin-bottom:8px;font-size:14px;">
+            方式三：从网页源代码复制
+        </p>
+        <div style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px;line-height:1.8;">
+            <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+                <span style="display:flex;align-items:center;gap:4px;"><span style="background:var(--primary);color:var(--text);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">1</span> 课表页面点<b>右键</b> → <b>查看页面源代码</b></span>
+                <span style="display:flex;align-items:center;gap:4px;"><span style="background:var(--primary);color:var(--text);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">2</span> 按 <b>Ctrl+A</b>（全选）→ <b>Ctrl+C</b>（复制）</span>
+                <span style="display:flex;align-items:center;gap:4px;"><span style="background:var(--primary);color:var(--text);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">3</span> 回到这里 <b>Ctrl+V</b>（粘贴）→ 点"导入"</span>
+            </div>
+        </div>
+        <textarea id="htmlPasteInput" rows="5" style="width:100%;border:1px solid var(--border);border-radius:6px;padding:8px;font-size:12px;font-family:monospace;resize:vertical;box-sizing:border-box;" placeholder="在页面源码中 Ctrl+A → Ctrl+C，再回到这里 Ctrl+V ..." onpaste="setTimeout(function(){document.getElementById('htmlPasteStatus').style.display='none';},100)"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+            <button class="form-submit" style="flex:1;font-size:13px;" onclick="importHtmlPaste()">解析并导入</button>
+        </div>
+        <div id="htmlPasteStatus" style="display:none;margin-top:8px;text-align:center;font-size:13px;"></div>
+    </div>
+</div>
+
+<!-- 设置弹窗 -->
+<div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('settingsModal')">×</button>
+        <div class="modal-title">设置</div>
+        <p style="text-align:center;color:var(--text-secondary);font-size:14px;margin-bottom:8px;">
+            作息时间：内蒙古工业大学通用时间表
+        </p>
+        <div id="periodTable" style="font-size:13px;color:var(--text-secondary);"></div>
+    </div>
+</div>
+
+<!-- 时段详情弹窗（替代原单课程详情） -->
+<div class="modal-overlay" id="slotDetailModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('slotDetailModal')">×</button>
+        <div class="modal-title" id="slotDetailTitle">该时段课程</div>
+        <div id="slotDetailBody"></div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+
+
+<script>
+// ===== 嵌入的课表数据 =====
+var EMBEDDED_ALL_WEEKS = {"1": {"semester_name": "2025-2026学年第二学期（2026春）", "current_week": 1, "total_weeks": 17, "week_start": "2026-03-09", "week_end": "2026-03-15", "periods": [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]], "weekdays": ["一", "二", "三", "四", "五", "六", "日"], "days": [{"day": 1, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 163, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 164, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 7, "end_period": 8, "courses": [{"id": 166, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-10周", "color": "#D9647A", "active": false}, {"id": 167, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": true}], "total": 2}]}, {"day": 2, "slots": [{"start_period": 3, "end_period": 4, "courses": [{"id": 169, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 170, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 171, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": true}, {"id": 172, "name": "运筹学", "teacher": "李娜", "location": "主425", "week_type": "odd", "week_info": "5-5周(单)", "color": "#B07CC9", "active": false}, {"id": 173, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "6-17周", "color": "#B07CC9", "active": false}], "total": 3}]}, {"day": 3, "slots": [{"start_period": 3, "end_period": 4, "courses": [{"id": 177, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 178, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-9周", "color": "#D9647A", "active": false}, {"id": 179, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": true}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 180, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 4, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 181, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 182, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 3, "end_period": 4, "courses": [{"id": 183, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}]}, {"day": 5, "slots": [{"start_period": 5, "end_period": 6, "courses": [{"id": 188, "name": "公司治理B", "teacher": "王晓燕", "location": "科0401", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": true}, {"id": 189, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0413", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": false}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 190, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}, {"id": 191, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "12-17周", "color": "#B07CC9", "active": false}], "total": 2}]}, {"day": 6, "slots": []}, {"day": 7, "slots": []}]}, "2": {"semester_name": "2025-2026学年第二学期（2026春）", "current_week": 2, "total_weeks": 17, "week_start": "2026-03-16", "week_end": "2026-03-22", "periods": [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]], "weekdays": ["一", "二", "三", "四", "五", "六", "日"], "days": [{"day": 1, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 163, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 164, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 165, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 7, "end_period": 8, "courses": [{"id": 166, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-10周", "color": "#D9647A", "active": false}, {"id": 167, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": true}], "total": 2}]}, {"day": 2, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 168, "name": "体育选项课(二)", "teacher": "操场", "location": "", "week_type": "", "week_info": "2-17周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 169, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 170, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 171, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": true}, {"id": 172, "name": "运筹学", "teacher": "李娜", "location": "主425", "week_type": "odd", "week_info": "5-5周(单)", "color": "#B07CC9", "active": false}, {"id": 173, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "6-17周", "color": "#B07CC9", "active": false}], "total": 3}]}, {"day": 3, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 176, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 177, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 178, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-9周", "color": "#D9647A", "active": false}, {"id": 179, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": true}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 180, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 4, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 181, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 182, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 3, "end_period": 4, "courses": [{"id": 183, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}]}, {"day": 5, "slots": [{"start_period": 5, "end_period": 6, "courses": [{"id": 188, "name": "公司治理B", "teacher": "王晓燕", "location": "科0401", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": true}, {"id": 189, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0413", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": false}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 190, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}, {"id": 191, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "12-17周", "color": "#B07CC9", "active": false}], "total": 2}]}, {"day": 6, "slots": []}, {"day": 7, "slots": []}]}, "3": {"semester_name": "2025-2026学年第二学期（2026春）", "current_week": 3, "total_weeks": 17, "week_start": "2026-03-23", "week_end": "2026-03-29", "periods": [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]], "weekdays": ["一", "二", "三", "四", "五", "六", "日"], "days": [{"day": 1, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 163, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 164, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 165, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 7, "end_period": 8, "courses": [{"id": 166, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-10周", "color": "#D9647A", "active": false}, {"id": 167, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": true}], "total": 2}]}, {"day": 2, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 168, "name": "体育选项课(二)", "teacher": "操场", "location": "", "week_type": "", "week_info": "2-17周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 169, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 170, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 171, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": true}, {"id": 172, "name": "运筹学", "teacher": "李娜", "location": "主425", "week_type": "odd", "week_info": "5-5周(单)", "color": "#B07CC9", "active": false}, {"id": 173, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "6-17周", "color": "#B07CC9", "active": false}], "total": 3}]}, {"day": 3, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 176, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 177, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 178, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-9周", "color": "#D9647A", "active": false}, {"id": 179, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": true}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 180, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 4, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 181, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 182, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 3, "end_period": 4, "courses": [{"id": 183, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}]}, {"day": 5, "slots": [{"start_period": 5, "end_period": 6, "courses": [{"id": 188, "name": "公司治理B", "teacher": "王晓燕", "location": "科0401", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": true}, {"id": 189, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0413", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": false}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 190, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}, {"id": 191, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "12-17周", "color": "#B07CC9", "active": false}], "total": 2}]}, {"day": 6, "slots": []}, {"day": 7, "slots": []}]}, "4": {"semester_name": "2025-2026学年第二学期（2026春）", "current_week": 4, "total_weeks": 17, "week_start": "2026-03-30", "week_end": "2026-04-05", "periods": [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]], "weekdays": ["一", "二", "三", "四", "五", "六", "日"], "days": [{"day": 1, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 163, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 164, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 165, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 7, "end_period": 8, "courses": [{"id": 166, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-10周", "color": "#D9647A", "active": false}, {"id": 167, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": true}], "total": 2}]}, {"day": 2, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 168, "name": "体育选项课(二)", "teacher": "操场", "location": "", "week_type": "", "week_info": "2-17周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 169, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 170, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 171, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": true}, {"id": 172, "name": "运筹学", "teacher": "李娜", "location": "主425", "week_type": "odd", "week_info": "5-5周(单)", "color": "#B07CC9", "active": false}, {"id": 173, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "6-17周", "color": "#B07CC9", "active": false}], "total": 3}]}, {"day": 3, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 176, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 177, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 178, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-9周", "color": "#D9647A", "active": false}, {"id": 179, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": true}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 180, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 4, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 181, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 182, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 3, "end_period": 4, "courses": [{"id": 183, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 7, "end_period": 8, "courses": [{"id": 184, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "even", "week_info": "4-4周(双)", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 5, "slots": [{"start_period": 3, "end_period": 4, "courses": [{"id": 186, "name": "形势与政策", "teacher": "卢朝霞", "location": "科0104", "week_type": "", "week_info": "13-16周", "color": "#D9647A", "active": false}, {"id": 187, "name": "统计学", "teacher": "杨丽", "location": "科0403", "week_type": "even", "week_info": "4-4周(双)", "color": "#4AB5C4", "active": true}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 188, "name": "公司治理B", "teacher": "王晓燕", "location": "科0401", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": true}, {"id": 189, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0413", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": false}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 190, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}, {"id": 191, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "12-17周", "color": "#B07CC9", "active": false}], "total": 2}]}, {"day": 6, "slots": []}, {"day": 7, "slots": []}]}, "5": {"semester_name": "2025-2026学年第二学期（2026春）", "current_week": 5, "total_weeks": 17, "week_start": "2026-04-06", "week_end": "2026-04-12", "periods": [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]], "weekdays": ["一", "二", "三", "四", "五", "六", "日"], "days": [{"day": 1, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 163, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 164, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 165, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 7, "end_period": 8, "courses": [{"id": 166, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-10周", "color": "#D9647A", "active": true}, {"id": 167, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": false}], "total": 2}]}, {"day": 2, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 168, "name": "体育选项课(二)", "teacher": "操场", "location": "", "week_type": "", "week_info": "2-17周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 169, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 170, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 171, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 172, "name": "运筹学", "teacher": "李娜", "location": "主425", "week_type": "odd", "week_info": "5-5周(单)", "color": "#B07CC9", "active": true}, {"id": 173, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "6-17周", "color": "#B07CC9", "active": false}], "total": 3}]}, {"day": 3, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 176, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 177, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 178, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-9周", "color": "#D9647A", "active": true}, {"id": 179, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": false}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 180, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 4, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 181, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 182, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 3, "end_period": 4, "courses": [{"id": 183, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}]}, {"day": 5, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 185, "name": "运筹学", "teacher": "李娜", "location": "科0426", "week_type": "", "week_info": "5-11周", "color": "#B07CC9", "active": true}], "total": 1}, {"start_period": 7, "end_period": 8, "courses": [{"id": 190, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}, {"id": 191, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "12-17周", "color": "#B07CC9", "active": false}], "total": 2}]}, {"day": 6, "slots": []}, {"day": 7, "slots": []}]}, "6": {"semester_name": "2025-2026学年第二学期（2026春）", "current_week": 6, "total_weeks": 17, "week_start": "2026-04-13", "week_end": "2026-04-19", "periods": [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]], "weekdays": ["一", "二", "三", "四", "五", "六", "日"], "days": [{"day": 1, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 163, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 164, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 165, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 7, "end_period": 8, "courses": [{"id": 166, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-10周", "color": "#D9647A", "active": true}, {"id": 167, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": false}], "total": 2}]}, {"day": 2, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 168, "name": "体育选项课(二)", "teacher": "操场", "location": "", "week_type": "", "week_info": "2-17周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 169, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 170, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 171, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 172, "name": "运筹学", "teacher": "李娜", "location": "主425", "week_type": "odd", "week_info": "5-5周(单)", "color": "#B07CC9", "active": false}, {"id": 173, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "6-17周", "color": "#B07CC9", "active": true}], "total": 3}]}, {"day": 3, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 176, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 177, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 178, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-9周", "color": "#D9647A", "active": true}, {"id": 179, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": false}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 180, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 4, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 181, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 182, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 3, "end_period": 4, "courses": [{"id": 183, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}]}, {"day": 5, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 185, "name": "运筹学", "teacher": "李娜", "location": "科0426", "week_type": "", "week_info": "5-11周", "color": "#B07CC9", "active": true}], "total": 1}, {"start_period": 7, "end_period": 8, "courses": [{"id": 190, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}, {"id": 191, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "12-17周", "color": "#B07CC9", "active": false}], "total": 2}]}, {"day": 6, "slots": []}, {"day": 7, "slots": []}]}, "7": {"semester_name": "2025-2026学年第二学期（2026春）", "current_week": 7, "total_weeks": 17, "week_start": "2026-04-20", "week_end": "2026-04-26", "periods": [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]], "weekdays": ["一", "二", "三", "四", "五", "六", "日"], "days": [{"day": 1, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 163, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 164, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 165, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 7, "end_period": 8, "courses": [{"id": 166, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-10周", "color": "#D9647A", "active": true}, {"id": 167, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": false}], "total": 2}]}, {"day": 2, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 168, "name": "体育选项课(二)", "teacher": "操场", "location": "", "week_type": "", "week_info": "2-17周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 169, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 170, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 171, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 172, "name": "运筹学", "teacher": "李娜", "location": "主425", "week_type": "odd", "week_info": "5-5周(单)", "color": "#B07CC9", "active": false}, {"id": 173, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "6-17周", "color": "#B07CC9", "active": true}], "total": 3}]}, {"day": 3, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 176, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 177, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 178, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-9周", "color": "#D9647A", "active": true}, {"id": 179, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": false}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 180, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 4, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 181, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 182, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 3, "end_period": 4, "courses": [{"id": 183, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}]}, {"day": 5, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 185, "name": "运筹学", "teacher": "李娜", "location": "科0426", "week_type": "", "week_info": "5-11周", "color": "#B07CC9", "active": true}], "total": 1}, {"start_period": 7, "end_period": 8, "courses": [{"id": 190, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}, {"id": 191, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "12-17周", "color": "#B07CC9", "active": false}], "total": 2}]}, {"day": 6, "slots": []}, {"day": 7, "slots": []}]}, "8": {"semester_name": "2025-2026学年第二学期（2026春）", "current_week": 8, "total_weeks": 17, "week_start": "2026-04-27", "week_end": "2026-05-03", "periods": [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]], "weekdays": ["一", "二", "三", "四", "五", "六", "日"], "days": [{"day": 1, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 163, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 164, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 165, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 7, "end_period": 8, "courses": [{"id": 166, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-10周", "color": "#D9647A", "active": true}, {"id": 167, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": false}], "total": 2}]}, {"day": 2, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 168, "name": "体育选项课(二)", "teacher": "操场", "location": "", "week_type": "", "week_info": "2-17周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 169, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 170, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 171, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 172, "name": "运筹学", "teacher": "李娜", "location": "主425", "week_type": "odd", "week_info": "5-5周(单)", "color": "#B07CC9", "active": false}, {"id": 173, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "6-17周", "color": "#B07CC9", "active": true}], "total": 3}, {"start_period": 7, "end_period": 8, "courses": [{"id": 174, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0407", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 1}]}, {"day": 3, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 176, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 177, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 178, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-9周", "color": "#D9647A", "active": true}, {"id": 179, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": false}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 180, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 4, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 181, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 182, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 3, "end_period": 4, "courses": [{"id": 183, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}]}, {"day": 5, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 185, "name": "运筹学", "teacher": "李娜", "location": "科0426", "week_type": "", "week_info": "5-11周", "color": "#B07CC9", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 188, "name": "公司治理B", "teacher": "王晓燕", "location": "科0401", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 189, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0413", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 190, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}, {"id": 191, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "12-17周", "color": "#B07CC9", "active": false}], "total": 2}]}, {"day": 6, "slots": []}, {"day": 7, "slots": []}]}, "9": {"semester_name": "2025-2026学年第二学期（2026春）", "current_week": 9, "total_weeks": 17, "week_start": "2026-05-04", "week_end": "2026-05-10", "periods": [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]], "weekdays": ["一", "二", "三", "四", "五", "六", "日"], "days": [{"day": 1, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 163, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 164, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 165, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 7, "end_period": 8, "courses": [{"id": 166, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-10周", "color": "#D9647A", "active": true}, {"id": 167, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": false}], "total": 2}]}, {"day": 2, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 168, "name": "体育选项课(二)", "teacher": "操场", "location": "", "week_type": "", "week_info": "2-17周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 169, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 170, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 171, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 172, "name": "运筹学", "teacher": "李娜", "location": "主425", "week_type": "odd", "week_info": "5-5周(单)", "color": "#B07CC9", "active": false}, {"id": 173, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "6-17周", "color": "#B07CC9", "active": true}], "total": 3}, {"start_period": 7, "end_period": 8, "courses": [{"id": 174, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0407", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 1}]}, {"day": 3, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 176, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 177, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 178, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-9周", "color": "#D9647A", "active": true}, {"id": 179, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": false}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 180, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 4, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 181, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": true}, {"id": 182, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": false}], "total": 2}, {"start_period": 3, "end_period": 4, "courses": [{"id": 183, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}]}, {"day": 5, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 185, "name": "运筹学", "teacher": "李娜", "location": "科0426", "week_type": "", "week_info": "5-11周", "color": "#B07CC9", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 188, "name": "公司治理B", "teacher": "王晓燕", "location": "科0401", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 189, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0413", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 190, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}, {"id": 191, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "12-17周", "color": "#B07CC9", "active": false}], "total": 2}]}, {"day": 6, "slots": []}, {"day": 7, "slots": []}]}, "10": {"semester_name": "2025-2026学年第二学期（2026春）", "current_week": 10, "total_weeks": 17, "week_start": "2026-05-11", "week_end": "2026-05-17", "periods": [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]], "weekdays": ["一", "二", "三", "四", "五", "六", "日"], "days": [{"day": 1, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 163, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 164, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 165, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 7, "end_period": 8, "courses": [{"id": 166, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "5-10周", "color": "#D9647A", "active": true}, {"id": 167, "name": "工程伦理(职业伦理)", "teacher": "刘业斌", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#E8A040", "active": false}], "total": 2}]}, {"day": 2, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 168, "name": "体育选项课(二)", "teacher": "操场", "location": "", "week_type": "", "week_info": "2-17周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 169, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": false}, {"id": 170, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": true}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 171, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 172, "name": "运筹学", "teacher": "李娜", "location": "主425", "week_type": "odd", "week_info": "5-5周(单)", "color": "#B07CC9", "active": false}, {"id": 173, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "6-17周", "color": "#B07CC9", "active": true}], "total": 3}, {"start_period": 7, "end_period": 8, "courses": [{"id": 174, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0407", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 1}, {"start_period": 9, "end_period": 10, "courses": [{"id": 175, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0412", "week_type": "even", "week_info": "10-10周(双)", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 3, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 176, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 177, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 7, "end_period": 8, "courses": [{"id": 180, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 4, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 181, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": false}, {"id": 182, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": true}], "total": 2}, {"start_period": 3, "end_period": 4, "courses": [{"id": 183, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}]}, {"day": 5, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 185, "name": "运筹学", "teacher": "李娜", "location": "科0426", "week_type": "", "week_info": "5-11周", "color": "#B07CC9", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 188, "name": "公司治理B", "teacher": "王晓燕", "location": "科0401", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 189, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0413", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 190, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}, {"id": 191, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "12-17周", "color": "#B07CC9", "active": false}], "total": 2}]}, {"day": 6, "slots": []}, {"day": 7, "slots": []}]}, "11": {"semester_name": "2025-2026学年第二学期（2026春）", "current_week": 11, "total_weeks": 17, "week_start": "2026-05-18", "week_end": "2026-05-24", "periods": [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]], "weekdays": ["一", "二", "三", "四", "五", "六", "日"], "days": [{"day": 1, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 163, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 164, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 165, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 2, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 168, "name": "体育选项课(二)", "teacher": "操场", "location": "", "week_type": "", "week_info": "2-17周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 169, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": false}, {"id": 170, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": true}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 171, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 172, "name": "运筹学", "teacher": "李娜", "location": "主425", "week_type": "odd", "week_info": "5-5周(单)", "color": "#B07CC9", "active": false}, {"id": 173, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "6-17周", "color": "#B07CC9", "active": true}], "total": 3}, {"start_period": 7, "end_period": 8, "courses": [{"id": 174, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0407", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 1}]}, {"day": 3, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 176, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 177, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 7, "end_period": 8, "courses": [{"id": 180, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 4, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 181, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": false}, {"id": 182, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": true}], "total": 2}, {"start_period": 3, "end_period": 4, "courses": [{"id": 183, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}]}, {"day": 5, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 185, "name": "运筹学", "teacher": "李娜", "location": "科0426", "week_type": "", "week_info": "5-11周", "color": "#B07CC9", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 188, "name": "公司治理B", "teacher": "王晓燕", "location": "科0401", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 189, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0413", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 190, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": true}, {"id": 191, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "12-17周", "color": "#B07CC9", "active": false}], "total": 2}]}, {"day": 6, "slots": []}, {"day": 7, "slots": []}]}, "12": {"semester_name": "2025-2026学年第二学期（2026春）", "current_week": 12, "total_weeks": 17, "week_start": "2026-05-25", "week_end": "2026-05-31", "periods": [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]], "weekdays": ["一", "二", "三", "四", "五", "六", "日"], "days": [{"day": 1, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 163, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 164, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 165, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 2, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 168, "name": "体育选项课(二)", "teacher": "操场", "location": "", "week_type": "", "week_info": "2-17周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 169, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": false}, {"id": 170, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": true}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 171, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 172, "name": "运筹学", "teacher": "李娜", "location": "主425", "week_type": "odd", "week_info": "5-5周(单)", "color": "#B07CC9", "active": false}, {"id": 173, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "6-17周", "color": "#B07CC9", "active": true}], "total": 3}, {"start_period": 7, "end_period": 8, "courses": [{"id": 174, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0407", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 1}]}, {"day": 3, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 176, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 177, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 4, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 181, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": false}, {"id": 182, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": true}], "total": 2}, {"start_period": 3, "end_period": 4, "courses": [{"id": 183, "name": "毛泽东思想和中国特色社会主义理论体系概论", "teacher": "付为政", "location": "科0120", "week_type": "", "week_info": "1-12周", "color": "#D9647A", "active": true}], "total": 1}]}, {"day": 5, "slots": [{"start_period": 5, "end_period": 6, "courses": [{"id": 188, "name": "公司治理B", "teacher": "王晓燕", "location": "科0401", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 189, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0413", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 190, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": false}, {"id": 191, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "12-17周", "color": "#B07CC9", "active": true}], "total": 2}]}, {"day": 6, "slots": []}, {"day": 7, "slots": []}]}, "13": {"semester_name": "2025-2026学年第二学期（2026春）", "current_week": 13, "total_weeks": 17, "week_start": "2026-06-01", "week_end": "2026-06-07", "periods": [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]], "weekdays": ["一", "二", "三", "四", "五", "六", "日"], "days": [{"day": 1, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 163, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 5, "end_period": 6, "courses": [{"id": 165, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 2, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 168, "name": "体育选项课(二)", "teacher": "操场", "location": "", "week_type": "", "week_info": "2-17周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 169, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": false}, {"id": 170, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": true}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 171, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 172, "name": "运筹学", "teacher": "李娜", "location": "主425", "week_type": "odd", "week_info": "5-5周(单)", "color": "#B07CC9", "active": false}, {"id": 173, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "6-17周", "color": "#B07CC9", "active": true}], "total": 3}, {"start_period": 7, "end_period": 8, "courses": [{"id": 174, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0407", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 1}]}, {"day": 3, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 176, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 177, "name": "统计学", "teacher": "杨丽", "location": "科0413", "week_type": "", "week_info": "1-13周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 4, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 181, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": false}, {"id": 182, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": true}], "total": 2}]}, {"day": 5, "slots": [{"start_period": 3, "end_period": 4, "courses": [{"id": 186, "name": "形势与政策", "teacher": "卢朝霞", "location": "科0104", "week_type": "", "week_info": "13-16周", "color": "#D9647A", "active": true}, {"id": 187, "name": "统计学", "teacher": "杨丽", "location": "科0403", "week_type": "even", "week_info": "4-4周(双)", "color": "#4AB5C4", "active": false}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 188, "name": "公司治理B", "teacher": "王晓燕", "location": "科0401", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 189, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0413", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 190, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": false}, {"id": 191, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "12-17周", "color": "#B07CC9", "active": true}], "total": 2}]}, {"day": 6, "slots": []}, {"day": 7, "slots": []}]}, "14": {"semester_name": "2025-2026学年第二学期（2026春）", "current_week": 14, "total_weeks": 17, "week_start": "2026-06-08", "week_end": "2026-06-14", "periods": [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]], "weekdays": ["一", "二", "三", "四", "五", "六", "日"], "days": [{"day": 1, "slots": [{"start_period": 5, "end_period": 6, "courses": [{"id": 165, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 2, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 168, "name": "体育选项课(二)", "teacher": "操场", "location": "", "week_type": "", "week_info": "2-17周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 169, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": false}, {"id": 170, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": true}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 171, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 172, "name": "运筹学", "teacher": "李娜", "location": "主425", "week_type": "odd", "week_info": "5-5周(单)", "color": "#B07CC9", "active": false}, {"id": 173, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "6-17周", "color": "#B07CC9", "active": true}], "total": 3}, {"start_period": 7, "end_period": 8, "courses": [{"id": 174, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0407", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 1}]}, {"day": 3, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 176, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 4, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 181, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": false}, {"id": 182, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": true}], "total": 2}]}, {"day": 5, "slots": [{"start_period": 3, "end_period": 4, "courses": [{"id": 186, "name": "形势与政策", "teacher": "卢朝霞", "location": "科0104", "week_type": "", "week_info": "13-16周", "color": "#D9647A", "active": true}, {"id": 187, "name": "统计学", "teacher": "杨丽", "location": "科0403", "week_type": "even", "week_info": "4-4周(双)", "color": "#4AB5C4", "active": false}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 188, "name": "公司治理B", "teacher": "王晓燕", "location": "科0401", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 189, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0413", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 190, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": false}, {"id": 191, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "12-17周", "color": "#B07CC9", "active": true}], "total": 2}]}, {"day": 6, "slots": []}, {"day": 7, "slots": []}]}, "15": {"semester_name": "2025-2026学年第二学期（2026春）", "current_week": 15, "total_weeks": 17, "week_start": "2026-06-15", "week_end": "2026-06-21", "periods": [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]], "weekdays": ["一", "二", "三", "四", "五", "六", "日"], "days": [{"day": 1, "slots": [{"start_period": 5, "end_period": 6, "courses": [{"id": 165, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 2, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 168, "name": "体育选项课(二)", "teacher": "操场", "location": "", "week_type": "", "week_info": "2-17周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 169, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": false}, {"id": 170, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": true}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 171, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 172, "name": "运筹学", "teacher": "李娜", "location": "主425", "week_type": "odd", "week_info": "5-5周(单)", "color": "#B07CC9", "active": false}, {"id": 173, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "6-17周", "color": "#B07CC9", "active": true}], "total": 3}, {"start_period": 7, "end_period": 8, "courses": [{"id": 174, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0407", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 1}]}, {"day": 3, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 176, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 4, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 181, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": false}, {"id": 182, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": true}], "total": 2}]}, {"day": 5, "slots": [{"start_period": 3, "end_period": 4, "courses": [{"id": 186, "name": "形势与政策", "teacher": "卢朝霞", "location": "科0104", "week_type": "", "week_info": "13-16周", "color": "#D9647A", "active": true}, {"id": 187, "name": "统计学", "teacher": "杨丽", "location": "科0403", "week_type": "even", "week_info": "4-4周(双)", "color": "#4AB5C4", "active": false}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 188, "name": "公司治理B", "teacher": "王晓燕", "location": "科0401", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 189, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0413", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 190, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": false}, {"id": 191, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "12-17周", "color": "#B07CC9", "active": true}], "total": 2}]}, {"day": 6, "slots": []}, {"day": 7, "slots": []}]}, "16": {"semester_name": "2025-2026学年第二学期（2026春）", "current_week": 16, "total_weeks": 17, "week_start": "2026-06-22", "week_end": "2026-06-28", "periods": [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]], "weekdays": ["一", "二", "三", "四", "五", "六", "日"], "days": [{"day": 1, "slots": [{"start_period": 5, "end_period": 6, "courses": [{"id": 165, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 2, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 168, "name": "体育选项课(二)", "teacher": "操场", "location": "", "week_type": "", "week_info": "2-17周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 169, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": false}, {"id": 170, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": true}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 171, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 172, "name": "运筹学", "teacher": "李娜", "location": "主425", "week_type": "odd", "week_info": "5-5周(单)", "color": "#B07CC9", "active": false}, {"id": 173, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "6-17周", "color": "#B07CC9", "active": true}], "total": 3}, {"start_period": 7, "end_period": 8, "courses": [{"id": 174, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0407", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 1}]}, {"day": 3, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 176, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 4, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 181, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": false}, {"id": 182, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": true}], "total": 2}]}, {"day": 5, "slots": [{"start_period": 3, "end_period": 4, "courses": [{"id": 186, "name": "形势与政策", "teacher": "卢朝霞", "location": "科0104", "week_type": "", "week_info": "13-16周", "color": "#D9647A", "active": true}, {"id": 187, "name": "统计学", "teacher": "杨丽", "location": "科0403", "week_type": "even", "week_info": "4-4周(双)", "color": "#4AB5C4", "active": false}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 188, "name": "公司治理B", "teacher": "王晓燕", "location": "科0401", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 189, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0413", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 190, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": false}, {"id": 191, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "12-17周", "color": "#B07CC9", "active": true}], "total": 2}]}, {"day": 6, "slots": []}, {"day": 7, "slots": []}]}, "17": {"semester_name": "2025-2026学年第二学期（2026春）", "current_week": 17, "total_weeks": 17, "week_start": "2026-06-29", "week_end": "2026-07-05", "periods": [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]], "weekdays": ["一", "二", "三", "四", "五", "六", "日"], "days": [{"day": 1, "slots": [{"start_period": 5, "end_period": 6, "courses": [{"id": 165, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 2, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 168, "name": "体育选项课(二)", "teacher": "操场", "location": "", "week_type": "", "week_info": "2-17周", "color": "#D9647A", "active": true}], "total": 1}, {"start_period": 3, "end_period": 4, "courses": [{"id": 169, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": false}, {"id": 170, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": true}], "total": 2}, {"start_period": 5, "end_period": 6, "courses": [{"id": 171, "name": "公司治理B", "teacher": "王晓燕", "location": "科0411", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 172, "name": "运筹学", "teacher": "李娜", "location": "主425", "week_type": "odd", "week_info": "5-5周(单)", "color": "#B07CC9", "active": false}, {"id": 173, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "6-17周", "color": "#B07CC9", "active": true}], "total": 3}, {"start_period": 7, "end_period": 8, "courses": [{"id": 174, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0407", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 1}]}, {"day": 3, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 176, "name": "通用英语(四)", "teacher": "姬京彤", "location": "二教202", "week_type": "", "week_info": "2-17周", "color": "#4AB5C4", "active": true}], "total": 1}]}, {"day": 4, "slots": [{"start_period": 1, "end_period": 2, "courses": [{"id": 181, "name": "电子商务(双语)", "teacher": "彭佳", "location": "科0411", "week_type": "", "week_info": "1-9周", "color": "#4AB5C4", "active": false}, {"id": 182, "name": "物流运作管理", "teacher": "李媛媛", "location": "科0411", "week_type": "", "week_info": "10-17周", "color": "#80B060", "active": true}], "total": 2}]}, {"day": 5, "slots": [{"start_period": 5, "end_period": 6, "courses": [{"id": 188, "name": "公司治理B", "teacher": "王晓燕", "location": "科0401", "week_type": "", "week_info": "1-4周", "color": "#D9647A", "active": false}, {"id": 189, "name": "Web开发与可视化", "teacher": "王鑫", "location": "科0413", "week_type": "", "week_info": "8-17周", "color": "#50B080", "active": true}], "total": 2}, {"start_period": 7, "end_period": 8, "courses": [{"id": 190, "name": "物流信息系统", "teacher": "崔敏杰", "location": "科0411", "week_type": "", "week_info": "1-11周", "color": "#4AB5C4", "active": false}, {"id": 191, "name": "运筹学", "teacher": "李娜", "location": "科0701", "week_type": "", "week_info": "12-17周", "color": "#B07CC9", "active": true}], "total": 2}]}, {"day": 6, "slots": []}, {"day": 7, "slots": []}]}};
+var EMBEDDED_CURRENT_WEEK = 10;
+var EMBEDDED_PERIODS = [[1, "08:20", "09:05"], [2, "09:15", "10:00"], [3, "10:20", "11:05"], [4, "11:15", "12:00"], [5, "14:00", "14:45"], [6, "14:55", "15:40"], [7, "16:00", "16:45"], [8, "16:55", "17:40"], [9, "18:40", "19:25"], [10, "19:35", "20:20"], [11, "20:30", "21:15"]];
+var EMBEDDED_WEEKDAYS = ["一", "二", "三", "四", "五", "六", "日"];
+var EMBEDDED_SEMESTER_NAME = "2025-2026学年第二学期（2026春）";
+
+// ===== 状态 =====
+const state = {
+    currentWeek: EMBEDDED_CURRENT_WEEK,
+    totalWeeks: Object.keys(EMBEDDED_ALL_WEEKS).length,
+    schedule: null,
+    selectedDay: 0,
+};
+
+// ===== 北京时间（UTC+8）工具函数 =====
+function getBeijingDate() {
+    var s = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Shanghai' });
+    return new Date(s + 'T00:00:00.000Z');
+}
+
+function calcBeijingCurrentWeek() {
+    var today = getBeijingDate();
+    var startMonday = new Date(Object.values(EMBEDDED_ALL_WEEKS)[0].week_start + 'T00:00:00.000Z');
+    var diff = Math.floor((today - startMonday) / (7 * 86400000));
+    return Math.max(1, Math.min(diff + 1, state.totalWeeks));
+}
+
+// ===== Toast =====
+function toast(msg, duration) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show';
+    setTimeout(() => el.className = 'toast', duration || 2000);
+}
+
+// ===== 模态框 =====
+function showModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+document.querySelectorAll('.modal-overlay').forEach(el => {
+    el.addEventListener('click', e => {
+        if (e.target === el) el.classList.remove('active');
+    });
+});
+
+// ===== 左右滑动切换周 =====
+(function() {
+    let startX = 0, startY = 0;
+    const MIN_SWIPE = 50;
+    document.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+    }, { passive: true });
+    document.addEventListener('touchend', e => {
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        const dx = endX - startX;
+        const dy = endY - startY;
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > MIN_SWIPE) {
+            if (e.target.closest('.modal-overlay, .modal, .modal-close')) return;
+            changeWeek(dx > 0 ? -1 : 1, true);
+        }
+    }, { passive: true });
+})();
+
+// ===== 初始化（动态计算当前周，基于北京时间） =====
+function init() {
+    loadSchedule(calcBeijingCurrentWeek());
+}
+
+function loadSchedule(week) {
+    var data = EMBEDDED_ALL_WEEKS[String(week)];
+    if (!data) return;
+    state.currentWeek = data.current_week;
+    state.totalWeeks = data.total_weeks;
+    state.schedule = data;
+    state.selectedDay = 0;
+    render();
+}
+
+// ===== 周导航 =====
+function changeWeek(delta, animate) {
+    var newWeek = state.currentWeek + delta;
+    if (newWeek < 1 || newWeek > state.totalWeeks) return;
+
+    if (!animate) {
+        state.currentWeek = newWeek;
+        loadSchedule(newWeek);
+        return;
+    }
+
+    var el = document.getElementById('courseTrack');
+    var dir = delta > 0 ? '-100%' : '100%';
+    el.style.transition = 'transform .25s cubic-bezier(0.25, 0.1, 0.25, 1)';
+    el.style.transform = 'translate3d(' + dir + ', 0, 0)';
+
+    setTimeout(function() {
+        state.currentWeek = newWeek;
+        loadSchedule(newWeek);
+        el.style.transition = 'none';
+        el.style.transform = 'translate3d(' + (delta > 0 ? '100%' : '-100%') + ', 0, 0)';
+        el.offsetHeight;
+        el.style.transition = 'transform .25s cubic-bezier(0.25, 0.1, 0.25, 1)';
+        el.style.transform = 'translate3d(0, 0, 0)';
+        setTimeout(function() {
+            el.style.transition = '';
+            el.style.transform = '';
+        }, 260);
+    }, 260);
+}
+
+function goToToday() {
+    state.currentWeek = calcBeijingCurrentWeek();
+    loadSchedule(state.currentWeek);
+}
+
+// ===== 辅助 =====
+function mutedColor(hex, alpha) {
+    var r = parseInt(hex.slice(1,3), 16);
+    var g = parseInt(hex.slice(3,5), 16);
+    var b = parseInt(hex.slice(5,7), 16);
+    var mr = Math.round(r + (192 - r) * 0.25);
+    var mg = Math.round(g + (192 - g) * 0.25);
+    var mb = Math.round(b + (192 - b) * 0.25);
+    return 'rgba(' + mr + ',' + mg + ',' + mb + ',' + alpha + ')';
+}
+
+function getTodayDayOfWeek() {
+    var d = getBeijingDate().getUTCDay();
+    return d === 0 ? 7 : d;
+}
+
+// ===== 渲染 =====
+function render() {
+    if (!state.schedule) return;
+    document.getElementById('headerTitle').textContent = state.schedule.semester_name;
+    document.getElementById('weekLabel').textContent = '第 ' + state.currentWeek + ' 周 / 共 ' + state.totalWeeks + ' 周';
+    document.getElementById('todayBtn').style.display = 'inline-block';
+    tableRender();
+    mobileRender();
+}
+
+// ===== 桌面端表格渲染 =====
+function tableRender() {
+    if (!state.schedule) return;
+    var periods = state.schedule.periods;
+    var weekdays = state.schedule.weekdays;
+    var days = state.schedule.days;
+
+    var slotByDay = {};
+    for (var i = 0; i < days.length; i++) {
+        slotByDay[days[i].day] = days[i].slots;
+    }
+
+    var occupied = {};
+    function mark(d, fromP, toP) {
+        for (var p = fromP; p <= toP; p++) {
+            occupied[d + '-' + p] = true;
+        }
+    }
+
+    // 节次列
+    var pHtml = '';
+    for (var pi = 0; pi < periods.length; pi++) {
+        pHtml += '<div class="period-item"><div class="period-num">' + periods[pi][0] + '</div>'
+              + '<div class="period-time">' + periods[pi][1] + '-' + periods[pi][2] + '</div></div>';
+    }
+    document.getElementById('periodColBody').innerHTML = pHtml;
+
+    // 日期表头
+    var hHtml = '';
+    var todayDOW = getTodayDayOfWeek();
+    var isCurrentWeek = calcBeijingCurrentWeek() === state.currentWeek;
+    for (var d = 0; d < weekdays.length; d++) {
+        var dateStr = '';
+        if (state.schedule.week_start) {
+            var start = new Date(state.schedule.week_start);
+            var dayDate = new Date(start);
+            dayDate.setDate(start.getDate() + d);
+            dateStr = (dayDate.getMonth() + 1) + '/' + dayDate.getDate();
+        }
+        var cls = d >= 5 ? ' weekend' : '';
+        if (isCurrentWeek && d + 1 === todayDOW) cls += ' today';
+        hHtml += '<div class="day-header' + cls + '">周' + weekdays[d]
+               + '<span class="day-date">' + dateStr + '</span></div>';
+    }
+    document.getElementById('scheduleHeader').innerHTML = hHtml;
+
+    // 课程网格
+    var cells = [];
+    for (var pi = 0; pi < periods.length; pi++) {
+        var num = periods[pi][0];
+        for (var d = 1; d <= 7; d++) {
+            var key = d + '-' + num;
+            if (occupied[key]) continue;
+
+            var isWeekend = d >= 6;
+            var slots = slotByDay[d] || [];
+            var slot = null;
+            for (var si = 0; si < slots.length; si++) {
+                if (slots[si].start_period === num) {
+                    var hasActive = false;
+                    for (var ci = 0; ci < slots[si].courses.length; ci++) {
+                        if (slots[si].courses[ci].active) { hasActive = true; break; }
+                    }
+                    if (hasActive) { slot = slots[si]; break; }
+                }
+            }
+
+            if (slot) {
+                var activeCourse = null;
+                for (var ci = 0; ci < slot.courses.length; ci++) {
+                    if (slot.courses[ci].active) { activeCourse = slot.courses[ci]; break; }
+                }
+                if (!activeCourse) {
+                    cells.push({ col: d, row: pi + 1, span: 1, empty: true, cls: isWeekend ? ' weekend' : '' });
+                    continue;
+                }
+                var span = slot.end_period - slot.start_period + 1;
+                if (span > 1) mark(d, slot.start_period, slot.end_period);
+                var badgeCount = slot.total - 1;
+                var badgeHtml = badgeCount > 0
+                    ? '<span class="slot-badge">+' + badgeCount + '</span>' : '';
+
+                cells.push({
+                    col: d, row: pi + 1, span: span,
+                    cls: isWeekend ? ' weekend' : '',
+                    html: '<div class="course-card" style="background:' + mutedColor(activeCourse.color,0.65)
+                        + ';" onclick="showSlotDetail(' + d + ',' + slot.start_period + ',' + slot.end_period + ')">'
+                        + '<div class="course-name">' + activeCourse.name + '</div>'
+                        + '<div class="course-location">' + (activeCourse.location || activeCourse.teacher || '') + '</div>'
+                        + badgeHtml + '</div>'
+                });
+            } else {
+                cells.push({ col: d, row: pi + 1, span: 1, empty: true, cls: isWeekend ? ' weekend' : '' });
+            }
+        }
+    }
+
+    var gHtml = '';
+    for (var ci = 0; ci < cells.length; ci++) {
+        var cell = cells[ci];
+        var pos = 'grid-column:' + cell.col + ';grid-row:' + cell.row + (cell.span > 1 ? '/span ' + cell.span : '');
+        if (cell.empty) {
+            gHtml += '<div class="course-cell empty' + cell.cls + '" style="' + pos + '"></div>';
+        } else {
+            gHtml += '<div class="course-cell' + cell.cls + '" style="' + pos + '">' + cell.html + '</div>';
+        }
+    }
+    document.getElementById('courseTrack').innerHTML = gHtml;
+}
+
+// ===== 移动端渲染 =====
+function mobileRender() {
+    if (!state.schedule) return;
+    var days = state.schedule.days;
+    var weekdays = state.schedule.weekdays;
+    var week_start = state.schedule.week_start;
+
+    if (!state.selectedDay) {
+        state.selectedDay = getTodayDayOfWeek();
+    }
+
+    var start = week_start ? new Date(week_start) : null;
+    var tabsHtml = '';
+    for (var d = 1; d <= 7; d++) {
+        var dateStr = '';
+        if (start) {
+            var dayDate = new Date(start);
+            dayDate.setDate(start.getDate() + d - 1);
+            dateStr = (dayDate.getMonth() + 1) + '/' + dayDate.getDate();
+        }
+        var isToday = d === getTodayDayOfWeek();
+        var isActive = d === state.selectedDay;
+        var cls = 'day-tab';
+        if (isActive) cls += ' active';
+        if (isToday) cls += ' today';
+        tabsHtml += '<div class="' + cls + '" onclick="switchToDay(' + d + ')">'
+                  + '<span class="dow">周' + weekdays[d-1] + '</span>'
+                  + '<span class="date-num">' + dateStr + '</span></div>';
+    }
+    document.getElementById('dayTabs').innerHTML = tabsHtml;
+
+    var dayData = null;
+    for (var i = 0; i < days.length; i++) {
+        if (days[i].day === state.selectedDay) { dayData = days[i]; break; }
+    }
+
+    var tlContainer = document.getElementById('mobileTimeline');
+    var ROW_H = 50;
+    var totalH = state.schedule.periods.length * ROW_H;
+
+    var labelsHtml = '';
+    for (var pi = 0; pi < state.schedule.periods.length; pi++) {
+        labelsHtml += '<div class="tl-label"><span class="num">' + state.schedule.periods[pi][0]
+                    + '</span><span class="time">' + state.schedule.periods[pi][1] + '</span></div>';
+    }
+
+    var coursesHtml = '';
+    if (dayData) {
+        for (var si = 0; si < dayData.slots.length; si++) {
+            var slot = dayData.slots[si];
+            var activeCourses = [];
+            for (var ci = 0; ci < slot.courses.length; ci++) {
+                if (slot.courses[ci].active) activeCourses.push(slot.courses[ci]);
+            }
+            if (!activeCourses.length) continue;
+
+            var course = activeCourses[0];
+            var span = slot.end_period - slot.start_period + 1;
+            var top = (slot.start_period - 1) * ROW_H;
+            var height = span * ROW_H - 4;
+            var badgeCount = slot.total - 1;
+            var badgeHtml = badgeCount > 0 ? '<div class="tl-badge">+' + badgeCount + '门</div>' : '';
+
+            coursesHtml += '<div class="tl-course" style="top:' + top + 'px;height:' + height
+                        + 'px;background:' + mutedColor(course.color,0.65)
+                        + '" onclick="showSlotDetail(' + state.selectedDay + ',' + slot.start_period + ',' + slot.end_period + ')">'
+                        + '<div class="name">' + course.name + '</div>'
+                        + '<div class="loc">' + (course.location || course.teacher || '') + '</div>'
+                        + badgeHtml + '</div>';
+        }
+    }
+
+    if (!coursesHtml) coursesHtml = '<div class="tl-empty">当天没有课程</div>';
+
+    tlContainer.innerHTML = '<div class="tl-wrapper" style="min-height:' + totalH + 'px">'
+                          + '<div class="tl-labels">' + labelsHtml + '</div>'
+                          + '<div class="tl-courses" style="min-height:' + totalH + 'px">' + coursesHtml
+                          + '</div></div>';
+}
+
+function switchToDay(day) {
+    state.selectedDay = day;
+    mobileRender();
+}
+
+function changeSelectedDay(delta) {
+    var newDay = state.selectedDay + delta;
+    if (newDay < 1) newDay = 7;
+    if (newDay > 7) newDay = 1;
+    state.selectedDay = newDay;
+    mobileRender();
+}
+
+// 移动端触摸滑动
+(function() {
+    var touchStartX = 0, touchStartY = 0;
+    var mv = document.getElementById('mobileView');
+    if (mv) {
+        mv.addEventListener('touchstart', function(e) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        mv.addEventListener('touchend', function(e) {
+            var dx = e.changedTouches[0].clientX - touchStartX;
+            var dy = e.changedTouches[0].clientY - touchStartY;
+            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+                if (dx < 0) changeSelectedDay(1);
+                else changeSelectedDay(-1);
+            }
+        }, { passive: true });
+    }
+})();
+
+// 窗口 resize
+(function() {
+    var resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(render, 200);
+    });
+})();
+
+// ===== 时段详情 =====
+function showSlotDetail(day, startPeriod, endPeriod) {
+    var dayData = null;
+    for (var i = 0; i < state.schedule.days.length; i++) {
+        if (state.schedule.days[i].day === day) { dayData = state.schedule.days[i]; break; }
+    }
+    if (!dayData) return;
+    var slot = null;
+    for (var si = 0; si < dayData.slots.length; si++) {
+        if (dayData.slots[si].start_period === startPeriod && dayData.slots[si].end_period === endPeriod) {
+            slot = dayData.slots[si]; break;
+        }
+    }
+    if (!slot) return;
+
+    var dayNames = state.schedule.weekdays || ['一','二','三','四','五','六','日'];
+    var weekday = dayNames[day - 1];
+
+    var html = '';
+    for (var ci = 0; ci < slot.courses.length; ci++) {
+        var course = slot.courses[ci];
+        var inactive = !course.active;
+        var cardStyle = inactive ? 'background:rgba(0,0,0,0.15)' : 'background:' + mutedColor(course.color,0.65);
+        var statusText = inactive ? '本周无课（' + course.week_info + '）' : '本周有课';
+
+        html += '<div class="slot-detail-card' + (inactive ? ' inactive' : '') + '" style="' + cardStyle + '">'
+              + '<div class="slot-detail-name">' + course.name + '</div>'
+              + '<div class="slot-detail-info">教师：' + (course.teacher || '未设置') + '</div>'
+              + '<div class="slot-detail-info">地点：' + (course.location || '未设置') + '</div>'
+              + '<div class="slot-detail-info">时间：周' + weekday + ' 第' + startPeriod + '-' + endPeriod + '节</div>'
+              + '<div class="slot-detail-info">周次：' + course.week_info + '</div>'
+              + '<div class="slot-detail-status">' + statusText + '</div></div>';
+    }
+
+    document.getElementById('slotDetailBody').innerHTML = html;
+    showModal('slotDetailModal');
+}
+
+// ===== 设置 =====
+function showSettings() {
+    var pTable = document.getElementById('periodTable');
+    var html = '<table style="width:100%;border-collapse:collapse;margin-top:8px;">'
+             + '<tr><th style="text-align:left;padding:6px;">节次</th><th style="text-align:left;padding:6px;">时间</th></tr>';
+    for (var pi = 0; pi < EMBEDDED_PERIODS.length; pi++) {
+        html += '<tr><td style="padding:4px 6px;border-bottom:1px solid #eee;">第' + EMBEDDED_PERIODS[pi][0]
+              + '节</td><td style="padding:4px 6px;border-bottom:1px solid #eee;">' + EMBEDDED_PERIODS[pi][1]
+              + ' - ' + EMBEDDED_PERIODS[pi][2] + '</td></tr>';
+    }
+    html += '</table>';
+    pTable.innerHTML = html;
+    showModal('settingsModal');
+}
+
+// ===== 启动 =====
+init();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+}
+</script>
+
+</body>
+</html>
