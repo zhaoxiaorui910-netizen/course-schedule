@@ -1,0 +1,2701 @@
+<!DOCTYPE html><html style="font-family: Microsoft YaHei, PingFangSC-Regular, PingFang SC, sans-serif;" >
+<head>
+    <title>登录 - 内蒙古工业大学</title>
+    <meta charset="UTF-8"/><meta name="renderer" content="webkit"/><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><link rel="icon" href="/cas/file/ico/webFavicon.ico" type="image/x-icon"/><script type="text/javascript" >
+    // var hmSiteId = "d605d8df6bf5ca8a54fe078683196518";
+    var hmSiteId = "d605d8df6bf5ca8a54fe078683196518";
+    if (hmSiteId) {
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?"+hmSiteId;
+        var s = document.getElementsByTagName("script")[0]; 
+        s.parentNode.insertBefore(hm, s);
+      })();
+    }
+    </script>
+
+    <script type="text/javascript" src="/cas/webjars/jquery/3.6.0/jquery.min.js"></script>
+
+  <script src="/cas/deps/js/babel.min.js"></script>
+  <script src="/cas/deps/js/babel.polyfill.js"></script>
+  <script src="/cas/deps/js/vue/dist/vue.min.js"></script>
+
+  <script src="/cas/deps/js/vant/vant.min.js"></script>
+
+  <script src="/cas/deps/js/sw-ui/lib/index.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="/cas/deps/js/sw-ui/lib/theme-chalk/index.css"><link rel="stylesheet" type="text/css" href="/cas/schemes/00426E/index.css"><style>
+    [v-cloak] {
+      display: none;
+    }
+  </style>
+
+<script src="https://authserver.imut.edu.cn/mf-remote/remote/remoteEntry.js"></script>
+
+<script src='/cas/deps/js/jsencrypt/3.0.0-rc.1/jsencrypt.min.js' type="text/javascript"></script>
+
+<script type="text/javascript">
+  var encryptEnabled = true;
+
+  var encrypt = new JSEncrypt();
+  
+  var url = "\/cas\/jwt\/publicKey";
+  $.get(url, function(publicKey){
+    // console.log(publicKey);
+    encrypt.setPublicKey(publicKey);
+  });
+  </script>
+
+<script type="text/javascript">
+  var loginError = {};
+  </script>
+
+<link rel="stylesheet" type="text/css" href="https://authserver.imut.edu.cn/mf-remote/remote/style.css"><link rel="stylesheet" type="text/css" href="/cas/themes/mf/css/mfa.css"><style>
+    [v-cloak] {
+      display: none;
+    }
+  </style>
+
+</head>
+
+<body>
+
+
+<main role="main">
+    <div id="content">
+
+<div id="vue_main" v-cloak>
+
+  <div style="display:none;">
+    <el-button id="showErrorMessageUsername" :plain="true" @click="showErrorMessageUsername">打开消息提示</el-button>
+    <el-button id="showErrorMessagePassword" :plain="true" @click="showErrorMessagePassword">打开消息提示</el-button>
+
+    <el-button id="showErrorMessageCaptcha" :plain="true" @click="showErrorMessageCaptcha">打开消息提示</el-button>
+
+    <el-button id="showErrorMessageMobile" :plain="true" @click="showErrorMessageMobile">打开消息提示</el-button>
+    <el-button id="showErrorMessageDynamicCode" :plain="true" @click="showErrorMessageDynamicCode">打开消息提示</el-button>
+
+    <el-button id="showSuccessMessageSendCode" :plain="true" @click="showSuccessMessageSendCode">打开消息提示</el-button>
+    <el-button id="showFailureMessageSendCode" :plain="true" @click="showFailureMessageSendCode">打开消息提示</el-button>
+
+    <el-button id="showGuardDialog" :plain="true" @click="showGuardDialog">打开消息提示</el-button>
+  </div>
+
+  <div>
+
+    <div class="card">
+
+    <el-dialog v-if="drcomIPLoginEnabled"
+      class="dialog-wrap"
+      title="校园网快速登录"
+      :visible.sync="drcomIPDialogVisible"
+      :close-on-click-modal="false"
+      width="506px"
+      height="420px">
+
+      <div class="check-tips" style="font-size: 14px;">
+        <img src="/cas/themes/mf/images/tip.svg"></img>
+        您正在使用<span>校园网</span>接入上网，可直接使用<span>校园网</span>上网账号快速登录。
+      </div>
+
+      <div class="app-style" style="height: 102px;">
+        <div style="font-size: 16px;">请确认是否使用该账号进行登录。</div>
+        <div class="code-wrap">
+          <div style="position: relative; text-align: center; font-size: 20px; margin-top: 15px;">上网IP：<span></span></div>
+          <div style="position: relative; text-align: center; font-size: 20px; margin-top: 15px;">上网账号：<span></span></div>
+        </div>
+      </div>
+
+      <span slot="footer" class="dialog-footer" style="height: 50px; display: block;">
+        <div id="drcomIPClose" style="display: inline-block; width: 20%;"><el-button @click="drcomIPDialogVisible = false">关闭</el-button></div>
+        <div id="drcomIPLogin" style="display: inline-block; width: 75%;"><el-button type="primary" @click="drcomIPLogin">上网账号快速登录</el-button></div>
+        <el-checkbox v-model="drcomIPLoginAutoEnabled">下次自动登录</el-checkbox>
+      </span>
+
+              <form style="display: none; width:0; height:0; border:0; margin: 0; padding: 0;" method="post" id="fm9" action="login">
+                        <input type="hidden" name="drcomUsername" value="" autocomplete="new-username"/><input type="hidden" name="execution" value="54fad0be-18cb-4afc-84f4-f7a2bf670314_ZXlKaGJHY2lPaUpJVXpVeE1pSjkuTDgvbG5Ib05mNWE2Tjh0WnF2U3N0OUNYNFY4Yjc4T1VoelhteCtkaERiM3prKzlaTHV0WldlU1MvS2kxNmFJK2F3T2F1NnB4bGhpZDJkaGxyZWN1OC85Y2NHYzFaM3lhcHJSZlh0ZVUybE1PZERPV2tna2tGS0dJcUlDUTFFM2xLblpac0ZuV0ZHSGhoeEoyWW9DTlNqZlVBa3RsOW93bVRYdlhOcEphTWYzN1ZkaGlkNlJobFlhckZGUU84VTdHM0JONXh6NFY5OHlZY3VYVlRhZTNGdkx6ZUV6YS9KZys5ZU1WelBkckpMSmxuQ2dzU1pGUFBnTmJRSXhCZEtidFhZSkhhSjNmbEJFNmllK3NxOE1JSThSWHY3ZHhBS1Rvd1ZpbUt4aVgrMGFzR3ZEdXoyYmxhN2JZUE92ekRCUzc4UGo2QndFeWdiNlpJK2RjTmdiQmQvZEd5RTJXWVo3VllobzJJR1JIaE4vclpocjYzckN5bnRUSEN5R2dBaGNZS25tcmwwOHUrbkZxdDcwaUFHUXVKc1ZrUll1M0ZXb2pkZDVBQTBPS1NyOXRMRngwelRJZmtjQ3kxYmYyQmQ4SVJYZ2V1eHZKQmJ5bDdsTWgrc2VjcGtJQWVvNEVsVEFqMUFBYzRHS3BGRWlvVkw4KzdCd0hTcWlxYnkzRHVuTG5scXhubXdsSEticHl1OXV3NkU3SHY4OTRWQXFoYzFIdWNlZnlZb1VsL2dJOVo0ZTJKVHU4ajdaK3pybFJTME9NbFR1RkhPajdEalhEOGNXL0lDZUgweCtJbms3NFBZVU5DVmtWekJiOGNySVFnM05pai9tckFjbWMwNkk4c2w0aDh2YnIyTUtOMmZkbWp6ZHdpdHlKRHRnQ0RKc1BrWTI4VFI5dS9FUGRUK3g0Y2M5VVV2SjhWbTdWTzJhWGozanQrbXV3azg4OGxsNHJEY1dvajF0ZVI5MVc4d05ITEkwdnFJbGV0K0o3dlBCOVJ0YkpPQmxST2NoQmhINWQrbFV3TWZRUDdFb1RSTTNRdGZoSGkwTFpvbG0zeDNuVXhScVJzNUw1SldPUGZOQy93ZXlKVjFyVkVtU2JGblg0Tk9nQndDd3VLU0FNRkI3KzVwMTlTY3NrSG50ellQU25qY0oyWEpxSXVEQ0doR0NRRHoyemlUUTFFUHJRbmFjNTd4b2RSbnlycXp3WVBlMDNsVFN6VEh0Vys5VUloZ0FONW9ucnNjTkFiSE1SdDdGSy9hVmpSeng2QzhhRi9semJNYjBWQXNMZXIrOEZBWVFLUkZHM1MxcHA5b0JIeXN0a0pPOGgvNG50OE5yWWZseG5ad0thVlgybXV2OU8zdklkRm5GM0tkOGtVWFZpTnJlWXR6T3EvaHFNRE5LbFJzWVlMRGdaKzBHaHpocUc4bzlLUEw4VmMrN0JqN3RZV3NlV2Q2a2RXMHdQdVVGVHZnQncwWHp4ZGlhRmxMdGJLWVBvYnhtaUI5cGdpU2Q2NUdHdFREQWFIc0M2Z2hybllBaWJXQmtidmIvejZSbFpqRVBpZzg1THNNMnBUUUp1b3VpZUpBaEpLay9CcDRaZjhsOE14RkdLenpBSVpORndnNiszRWVmQkhyeG51WFZOMmJjSFBrNlJwc1F0RmhPczgzbFNLNFk1RVh2NEl1OFV2MkwyRUZaTFFZdHhMclNNTHhNNDNaNUJEUU4wZXNjV0d0SW1seWRzV01KVlRDRitXWXJYRlJ6MkM1TTVBWWlhYytqbXFEQXU0Q0lIZGRYK0FtbDcrWXpFSWlzeERSREh1SUpnSDFuVlpIQzUyZWkzOGxrQ0FrYkFtc1hjMjdQdDR1TC9wVFdoZ3N2Y0RTMVZySXNHTFBzeGpaZDZjMGdyeGlDVHhDRld5TnN4QithODRqQk1QY1hGU25QZDFNYXI1VG5uUzU5VmQyV2xrSU5TWFc1czc5Vjd1MUZLUktsdmt6WVA5a2hSZml1STdVd1dvbzgzOWVMR1NZR0NXRjI0MEdRaXQ4VWJQNGJWZGVwWTJGdUw1bGd6aUdUZTRoRXNPZFdnbnVNcHJKMzl0NFltcXNQdXcwQW02MlkvRDFQaDRad1pxSFNqUlJid2c3U0tTWDI0akdybjBFMTZ2RTczNU83eFVYbnNoZTVXd2cwd2J4TVNpMWVpOGJZUzMyelNUMVArN2hrYnpiVS9HTUd1WkF0ZjArajlXaldUZXJwN3NtZlNaaUl4amI2cGhpbmJDa1FHNEYxeE5kWmVsdTdXb2J2QmFjQmhScFFvRVduV290c2ZFMXFkVFgyVHYwbS83SVgxb29hcDZZem51MmlUMWdZdlpYVnlNdVVNYjdNQjFYREc0TWxZcHVyU0hPVXpoc0FuVllhRGFDUkZkYzlkWjdXRTlWWHIwL09MNzdHN0VSKzYxSXFGMHV4Njd2UTRPWXhEdVlMZTRmSnJKUmFnaVhuMHgyL0tub1VpOFhuTllTQ0phb2x0akwyYnVQTjUwRzVVTmo4ak1reWZyUXFpdDVtWDFpdVhqT0wzNDVScUVrNnQxTDhZb05KREhFM1RjemV4WitWWElJeXdWcEl0cVk5dVo4SUJLTWYyRXVoOTl5ZVFwZGUwUng4d1RxcnpTQ2EvUnF5Y0EzQWdEeFY1Q1BEYlpBaytVYjlwVXhvWVdGdmxUN2drTUl6WjNmWWZEaktweEsyUXJNaVBNWENYR3hYRmVXcjdwUE5qblhrTFpBNm1oazZxRG90RmNOU3hjazBwUlFIVUJCanpiSGhVK2Y3MTRHVmJ0VzAzc2d6L3oyVDc2cG1scjI5bFRjTkt3Tm5UMmFFUHB1dXlweXNTOWFHZ3pmVXVvQzFNdVN0SjlLV2U0bzdaZ01iNVRLWUR1Uy80MEtXVWNBdWY3MFl2enNqTkpDbWJlUTRPS2Nqd0hWdEtWczUxc0xuQlBjU1VDTXFWSkVSZW5CVmlZTTlUYjltWnc1b0NpMU9EemRaK1h2ZUhQYnJuNlhrYWQ0YTBpSktQR2taNlFwT3M1ZThibUVTN0s4bWp5NUNuV3N5cUJNTGQxT25DTUl0U2hMWHRIUndIelVDTFZLTEpNdEl3Tk5FWmQ3bVp5Y3NzcXo0MGJCN3VJbkNDZEpoNzY5MWtELzlFTGZ6YmZ1aWt5VVh2OHFnb3FJczZQSGV0MFZhR1VFemxtT1MvQXE0eFZ4UjhRYThKUkR2UzlHaXF6MVpZZHBrejFRS1doNy91NzZUWFpHcjJwcWJGVVQ4V1poUkRPeEJkbjh6bGFVSDJPTk5qS2VhYUF6SWh0aG53WDBtTTVUdXRuTURqM3pYbkdPNUpPNU9DRThpcmg1K2ttVlZ1K3M5bjFiVysvbWZTd3ZqV0E1SVp5b1pKcG1BR3FqVzkwSjFacnhBM0hkYnQ4QnluN1NYVGFzcENsallBMHdLTUwyTk43cGRZNG4xNHE5M2VVRERtOUlNOEZtdVY0QmpNQ3VwQ3NGdjBUUk9Db0J0TzdwbHM5ZzBKNEJieGlIYWd4WkN4dkFENVY3R254SnoySUFKaUJMd0NVam1MQmlnRktpNk1BaDhIcHEwcXZnS3Vzd0daSHZRK2ErM3VTUlFOMWtnekNuTDRHK25NK0RxazNhd3VMOGtMa0NVU0M0S2FhTmsrUHY1Vkg2U1hhUmd0a3l5OUJCSmxxTHlNRXZxY3BCVFBaaTVUOXhDWmQrYTJ4My9QWGtWSlV3MDR2d2x2YjdZT1U0YWpaa3NZSkk2SzlJbzdpdUFVMXZZWVQranVXMVZhSWhYZ21BNnRKSmh0cS9POUJuUlJGNktOQkx5SFpjUTRjeWZHWmhSTXI1OVQzRWFFNUVhTStGVDlqN2RoaWpYc1NHVUJWUGFMSDIrV2JSV2kzbFM3WXM5aEdtR2VwbEQrQzcrV0FSb3JEQldUOEhOQXJ1RTh1aUxaK3lIK2c0b3JDUTI3WmI0YTBjd0ZhamIreFFwbE5YbmVpdkdHM2VTTTBSOFBSUTRoNXM5RVZjRWh1dGhFVGpIUWdQOXp4UkJBMTZnQ0dTWStXQXdpRm90NHhvRUpDd2dzU3V3YzhseWpGTVdobnBDK1YyWDc0UzB5b21GZ0hHVUs5eGllRWI4SldpYlhHMUNxSTI5V1VBSWFQV3VMcm5YU2djWXJTL2tSdlVUV2xyZkdDNlk5N25VZjNOYXQrUEtubi9tOVhnaS9lSlF5bjlVMStlQktBeG1EZlN3akNtMjVpd2VXc2JUeGtQN0lyb2gvV0YrYkh1WUZNT3RmMTJCNDFwRGJueGoxL043SlViY2hpWkltODhHM2dFZTNSWEZBY0RrWHNyS0VhNTkzUzZGOG9HdXM3Q0J6RWExMG5nSzFTWGNQWTl1Z2tQN1BPakh1c0lmcWRzc2pNNjEyRUFzWmdMZWU1L2EvS3h0cWw0bU1IM1BjdUxQbWFwUnZBVElxaEo4TzJ3b2dHQ1JnV0lwcHpFTWVpcmdMR1dJMzQrNmliQzlNWENsZ2ZYaktyTFpwS1ViQ0s1eVNXWExwZm5WaWoxY1hlWlRHTlY3eldoQ2ZwNDNaeGppalAvbkpCOHljalhpa2YyVnk1c0NWMVF2SURqM1ljc1FFbjBZVlk3bDduaDNRSm4yQzlrSFMvV0xtSERwMDlXV0YyL0dndHloNWZOZzJFclZDN0hMOTNjZ25OZG1xczdJU1QwZFRlVjY0L3ZlVGthTDZ0V2VmWUZzUUtDeGhBeGJISTNCMHNVSHN5c2ZVSDVTTGpMT0JXMjJsam9zVmZERFZ0TjMvUU95VWJCY05ITXgwYkZHMDdtTEtRa1d3YzE3RmR2a2V1bkVDMjBQc1V6elc0akpMY2FTejBqNTRuR2tROUpCdVJ6ZWtOSkdxbnREQXhjN3lRVDdnWWFNSkkwTmVucldGSUFlYk0xVmZTeTErTVRTWWJtWG1OcHk1d2o3SVR1dkZYZVhWYVk4N3VHeHdOY0hSbng0NXpBeUdiMmhkWms5ZVJVWXFaWW9MU01ESTN6SHlaem40bGtaS291bVBURDY3ZDhzUkJIeWpDd1F0TE1Zd0lUNDQ0dVNrVHhDSFdROVRpaGFHRDZQQmhoMGthZThBNDQwcGMwUE1DNWtNWjVBYTN4S0dGRDhFRXMvOWs3cTl3M0liUUpPSWtyL1FyeTNLbG5yRk1HS2U3alA5eUFkU0kySjJVWTVOeFJGZnNCckc4dGNqNmpERW1BMnh1STVDUThoOTlrdXlFbG4wV3NqM3JTQVduemNodExKbzBmOEdxay80bjRtcVV0bERsbFkwNG1XbW1EeFBuNzlpbjdFRVd4MWNlY0p0eDhOaHJNWGxsZUNYYi8zalIvdlZScEVxZFRwVEk5N3VndDE4K2NWZEt3bWFUbVMvSmxmMmVObHA5eVc0MWorWlNGZTk0RnlaQjJ1MXJNTHVvWm5RZ0hBV0Zqa2RHckN4aGdWeUc4M1F3MDhFR2xlUlJsL0JnWk5BRktUYzlwTjJzZFhMMkk4dytUT1dlVFNhUER2SW14TlVXN1dHeThDSGF2bWJ1a1J0RUthT3J6K083LzBsYm1MTDVZdlFlWTQyM3czd24vYjMrUTMrUnZpQkVuWVhHRnh4Y1EvZDZzUS9uZlRNOFFtMkUzWWRZUjduRVhybTlMbktmd09QRUNybDlTeEZiTjMwK3ZVSkVBbW44eHlCRW1Jc3A3RzdLdEpueXRkRzVsbHlSQ0JMSjBZRXdvREdtT25UbHVUOFdRZnUvdEdva3ltN1RGdlh4dytMQXoyR3N0dERZSVNUMFNoOFhrTjIyc21ob3FjOWpqanBqZXdZTTFIU0ZVaVE0aWdEaHIxSU84TVZtbk1MOXVkeDI4UDU1UUVhdmwrQzFIMzNnM1pWRFBHM0tvS2M4RWhwSFVGMEJjYmxiOTJTQ2R6NUEyWFp2UWl0Z1AwYURUV254V0taWSs1eEh5VXFBVGhNaCtUZ25yUFRtaGFCVExWcWJJZjh4MmtkR2hrdW5tOWJDUm5TYnl4Q2dUc2dndysvNkwyeUFBUjVCMVFnZDJmUlhYZGdIemZLTWZXdlZsR2poTjNZYkhpR2NsMWpQSnlZLzE2S0U2Unh3eVIzVUZ5OG92RlBESG5qQjBOamRhMFZBbFJ1b0JJaVY1elpqd2cxaWZ6bURQZkprNDZHcnVYenlUMFhjRDlSaHh3MTkreHEyK200ZHd1dFhLSndUMkZ2STV1b2pUYTJzQUY4ZG1tZC9IdkVheUcxd2IzdFhJSGZrNlUybm5FSTVTV1BPN2xTUXlaMTIxbXRETlV2UWZrQnpiRUpuckVOQzZLYzBJYVJVL2ExK1hXUEw5RXMwNm5OZ3loby93b2Q2c1JnQmhXeWY3cTJXZDVyTlVLVUFybm9OSDQ2MUdpc1l5c2d3YTFSUHRjcWhmNzFzVnp4TWkyMHhOMHlKaXpDU2dKL0JrV0NBM0NGd2lhQ2FtTEVFTVJYMnpGVWhWbDNVNFVBY2YrNHdBUkpNZENQMjhPc2JWd0NFRUNONjAveWgwR0IwRC9NbENKNm1IbEcvRmJ2RE9NNm1RdXFRMWVLbFp6S3VyZmlXR2MrdkZRQ3N6MzcrYTZTTERSSHVyb1ZnQW8yRG9UVTZqRlREd3Rteit1c01YclQ3K2tZeVlqa1E2WmhBaC9FamNnUUg3bHg2QVpzMUhFSXBQUUdyUHo1RHFxejZHdFBLSnRTV1VmK1gvZm1ldFduQVVkcmxzMjBaY0YrcEdEc25BK0F5ZFM0eGRNZmd1OG1HQnc5VnUza3l6T1R5THhCSUV0VWFCelJnU1FvUExseWNMcU1PVmFKN3BEeVJ6WHNXazZLYnZkSWsyMlMyUmo3cWZxajBxbmtsenpFTHpqZjY0bXp4dmVNZlRkdFRPc21jQ0JITjZvUHFCZkI5c2IxUWs0SzdCUU9rR0Rad1hIUXNpa2ZsUUpjTnllU3AyZ3B5QUMyMHhsb1VkY0p4UUJMSUZpQWZaZWovbVN4YzBYK0lDY1RQMEFhL0N0ZTc1b01qSFVxNEJUdFFERmgrMXEyS3JvQ3VLaWxaVnBJUWlVc1FmTlZWWW0ydGtDZndFbWgzSnpRMDVUWFovMEY5eUJlWWhKODBFMXNvcTNQS0xxL1pXRWpBYUdQS1J0bUZYMDVQTHRIRlRHbHN4dFAyUDBhWDMrL1BoTXQzbk1kR09NYnBjZCtGMjNha3lVMm1IVGtGRVVEYm9LRlNiQktldUtuaDl4dURYeFdyUEtuMCtQOW9xT3FveVJES24vVVZraW5YZG5aTTFtaFViMlhoWTR6cXBqY1JHb2RhMXdkMW42MmxEeXV4SVV3WkVvUDI3K3ZYYjVveXFiQzZwNG9abHI1dGpXNzltS3puNUIwUEg3bmxuTmMyZWMvNE95REgxQmtEcnl2RitGakl4MnRtZlJaUi9nUWZmMmgwbmNMNGN4dzlUU0F2aGxoMWhzQ1hCdnFFRjJuclEwZjVFS0dMTDN0RkZSOEpWejNXY05iRlpQaTlwcTM3Mk1vTlJsa3Z3TVZ2V05mblY3UkdTeXg3dVh1WVhLWDJLNWd5aGFjcDFHZyttWWpXdE16OWl4OFVaZmtoSHZNa3hJb3AwYlN4ck94Wnc1T3A2ZXpNWWJ1ZGJkVjJOM0xRQlRzenlkYUx0dWJ2ZExleVljNTNkaEhmZz09LnBQaVlXdWYzUjhObU5oZUhDS29Bc0xNOTFQdUpMUU43WXJXdmZlVXVLSlhMYzZrWGlmUGR5d0ZnZndNXzNxcm9yWnlpNE02dEI3YnFxQl9PWUNvcURR"/><input type="hidden" name="_eventId" value="submitDrcomIPLogin"/><input type="hidden" name="geolocation"/><input type="hidden" name="fpVisitorId"/><input 
+                               name="submit"
+                               type="submit"
+                               value="Login9"
+                               style="display:none; width: 100%"
+                        /></form>
+
+    </el-dialog>
+
+            </div>
+
+    <!-- /* <sw-dialog
+      title="公告"
+      width="500px"
+      :visible.sync="dialogVisible"
+      :before-close="handleClose" 
+      th:utext="${noticeContent}">
+    </sw-dialog> */ --><!-- 通知公告弹框 --><!-- /* <el-dialog
+      class="notice-dialog-wrap"
+      :visible.sync="noticeDialogVisible"
+      width="450px"
+      :before-close="closeNotice">
+      <div>
+        <div class="notice-title">通知公告</div>
+        <el-scrollbar>
+          <div class="content" th:utext="${loginNoticeContent}"></div>
+        </el-scrollbar>
+        <div class="notice-btn">
+          <sw-button size="small" type="primary" simple round @click="noticeDialogVisible=false">我知道了</sw-button>
+        </div>
+      </div>
+    </el-dialog> */ --><div id="layout"></div>
+
+            <form method="post" id="fm1" action="login" style="display: none;">
+                <input type="hidden" id="username" name="username" v-model="passwordLoginUsername" autocomplete="off"/><input type="hidden" id="password" name="password" v-model="passwordLoginPassword" autocomplete="off"/><input type="hidden" id="captcha" name="captcha" v-model="passwordLoginCaptcha" autocomplete="new-captcha" /><input type="checkbox" id="rememberMe" name="rememberMe" v-model="passwordLoginRememberMe" /><input type="hidden" name="currentMenu" value="1"/><input type="hidden" name="failN" value="-1"/><input type="hidden" name="mfaState" value=""/><input type="hidden" name="execution" value="54fad0be-18cb-4afc-84f4-f7a2bf670314_ZXlKaGJHY2lPaUpJVXpVeE1pSjkuTDgvbG5Ib05mNWE2Tjh0WnF2U3N0OUNYNFY4Yjc4T1VoelhteCtkaERiM3prKzlaTHV0WldlU1MvS2kxNmFJK2F3T2F1NnB4bGhpZDJkaGxyZWN1OC85Y2NHYzFaM3lhcHJSZlh0ZVUybE1PZERPV2tna2tGS0dJcUlDUTFFM2xLblpac0ZuV0ZHSGhoeEoyWW9DTlNqZlVBa3RsOW93bVRYdlhOcEphTWYzN1ZkaGlkNlJobFlhckZGUU84VTdHM0JONXh6NFY5OHlZY3VYVlRhZTNGdkx6ZUV6YS9KZys5ZU1WelBkckpMSmxuQ2dzU1pGUFBnTmJRSXhCZEtidFhZSkhhSjNmbEJFNmllK3NxOE1JSThSWHY3ZHhBS1Rvd1ZpbUt4aVgrMGFzR3ZEdXoyYmxhN2JZUE92ekRCUzc4UGo2QndFeWdiNlpJK2RjTmdiQmQvZEd5RTJXWVo3VllobzJJR1JIaE4vclpocjYzckN5bnRUSEN5R2dBaGNZS25tcmwwOHUrbkZxdDcwaUFHUXVKc1ZrUll1M0ZXb2pkZDVBQTBPS1NyOXRMRngwelRJZmtjQ3kxYmYyQmQ4SVJYZ2V1eHZKQmJ5bDdsTWgrc2VjcGtJQWVvNEVsVEFqMUFBYzRHS3BGRWlvVkw4KzdCd0hTcWlxYnkzRHVuTG5scXhubXdsSEticHl1OXV3NkU3SHY4OTRWQXFoYzFIdWNlZnlZb1VsL2dJOVo0ZTJKVHU4ajdaK3pybFJTME9NbFR1RkhPajdEalhEOGNXL0lDZUgweCtJbms3NFBZVU5DVmtWekJiOGNySVFnM05pai9tckFjbWMwNkk4c2w0aDh2YnIyTUtOMmZkbWp6ZHdpdHlKRHRnQ0RKc1BrWTI4VFI5dS9FUGRUK3g0Y2M5VVV2SjhWbTdWTzJhWGozanQrbXV3azg4OGxsNHJEY1dvajF0ZVI5MVc4d05ITEkwdnFJbGV0K0o3dlBCOVJ0YkpPQmxST2NoQmhINWQrbFV3TWZRUDdFb1RSTTNRdGZoSGkwTFpvbG0zeDNuVXhScVJzNUw1SldPUGZOQy93ZXlKVjFyVkVtU2JGblg0Tk9nQndDd3VLU0FNRkI3KzVwMTlTY3NrSG50ellQU25qY0oyWEpxSXVEQ0doR0NRRHoyemlUUTFFUHJRbmFjNTd4b2RSbnlycXp3WVBlMDNsVFN6VEh0Vys5VUloZ0FONW9ucnNjTkFiSE1SdDdGSy9hVmpSeng2QzhhRi9semJNYjBWQXNMZXIrOEZBWVFLUkZHM1MxcHA5b0JIeXN0a0pPOGgvNG50OE5yWWZseG5ad0thVlgybXV2OU8zdklkRm5GM0tkOGtVWFZpTnJlWXR6T3EvaHFNRE5LbFJzWVlMRGdaKzBHaHpocUc4bzlLUEw4VmMrN0JqN3RZV3NlV2Q2a2RXMHdQdVVGVHZnQncwWHp4ZGlhRmxMdGJLWVBvYnhtaUI5cGdpU2Q2NUdHdFREQWFIc0M2Z2hybllBaWJXQmtidmIvejZSbFpqRVBpZzg1THNNMnBUUUp1b3VpZUpBaEpLay9CcDRaZjhsOE14RkdLenpBSVpORndnNiszRWVmQkhyeG51WFZOMmJjSFBrNlJwc1F0RmhPczgzbFNLNFk1RVh2NEl1OFV2MkwyRUZaTFFZdHhMclNNTHhNNDNaNUJEUU4wZXNjV0d0SW1seWRzV01KVlRDRitXWXJYRlJ6MkM1TTVBWWlhYytqbXFEQXU0Q0lIZGRYK0FtbDcrWXpFSWlzeERSREh1SUpnSDFuVlpIQzUyZWkzOGxrQ0FrYkFtc1hjMjdQdDR1TC9wVFdoZ3N2Y0RTMVZySXNHTFBzeGpaZDZjMGdyeGlDVHhDRld5TnN4QithODRqQk1QY1hGU25QZDFNYXI1VG5uUzU5VmQyV2xrSU5TWFc1czc5Vjd1MUZLUktsdmt6WVA5a2hSZml1STdVd1dvbzgzOWVMR1NZR0NXRjI0MEdRaXQ4VWJQNGJWZGVwWTJGdUw1bGd6aUdUZTRoRXNPZFdnbnVNcHJKMzl0NFltcXNQdXcwQW02MlkvRDFQaDRad1pxSFNqUlJid2c3U0tTWDI0akdybjBFMTZ2RTczNU83eFVYbnNoZTVXd2cwd2J4TVNpMWVpOGJZUzMyelNUMVArN2hrYnpiVS9HTUd1WkF0ZjArajlXaldUZXJwN3NtZlNaaUl4amI2cGhpbmJDa1FHNEYxeE5kWmVsdTdXb2J2QmFjQmhScFFvRVduV290c2ZFMXFkVFgyVHYwbS83SVgxb29hcDZZem51MmlUMWdZdlpYVnlNdVVNYjdNQjFYREc0TWxZcHVyU0hPVXpoc0FuVllhRGFDUkZkYzlkWjdXRTlWWHIwL09MNzdHN0VSKzYxSXFGMHV4Njd2UTRPWXhEdVlMZTRmSnJKUmFnaVhuMHgyL0tub1VpOFhuTllTQ0phb2x0akwyYnVQTjUwRzVVTmo4ak1reWZyUXFpdDVtWDFpdVhqT0wzNDVScUVrNnQxTDhZb05KREhFM1RjemV4WitWWElJeXdWcEl0cVk5dVo4SUJLTWYyRXVoOTl5ZVFwZGUwUng4d1RxcnpTQ2EvUnF5Y0EzQWdEeFY1Q1BEYlpBaytVYjlwVXhvWVdGdmxUN2drTUl6WjNmWWZEaktweEsyUXJNaVBNWENYR3hYRmVXcjdwUE5qblhrTFpBNm1oazZxRG90RmNOU3hjazBwUlFIVUJCanpiSGhVK2Y3MTRHVmJ0VzAzc2d6L3oyVDc2cG1scjI5bFRjTkt3Tm5UMmFFUHB1dXlweXNTOWFHZ3pmVXVvQzFNdVN0SjlLV2U0bzdaZ01iNVRLWUR1Uy80MEtXVWNBdWY3MFl2enNqTkpDbWJlUTRPS2Nqd0hWdEtWczUxc0xuQlBjU1VDTXFWSkVSZW5CVmlZTTlUYjltWnc1b0NpMU9EemRaK1h2ZUhQYnJuNlhrYWQ0YTBpSktQR2taNlFwT3M1ZThibUVTN0s4bWp5NUNuV3N5cUJNTGQxT25DTUl0U2hMWHRIUndIelVDTFZLTEpNdEl3Tk5FWmQ3bVp5Y3NzcXo0MGJCN3VJbkNDZEpoNzY5MWtELzlFTGZ6YmZ1aWt5VVh2OHFnb3FJczZQSGV0MFZhR1VFemxtT1MvQXE0eFZ4UjhRYThKUkR2UzlHaXF6MVpZZHBrejFRS1doNy91NzZUWFpHcjJwcWJGVVQ4V1poUkRPeEJkbjh6bGFVSDJPTk5qS2VhYUF6SWh0aG53WDBtTTVUdXRuTURqM3pYbkdPNUpPNU9DRThpcmg1K2ttVlZ1K3M5bjFiVysvbWZTd3ZqV0E1SVp5b1pKcG1BR3FqVzkwSjFacnhBM0hkYnQ4QnluN1NYVGFzcENsallBMHdLTUwyTk43cGRZNG4xNHE5M2VVRERtOUlNOEZtdVY0QmpNQ3VwQ3NGdjBUUk9Db0J0TzdwbHM5ZzBKNEJieGlIYWd4WkN4dkFENVY3R254SnoySUFKaUJMd0NVam1MQmlnRktpNk1BaDhIcHEwcXZnS3Vzd0daSHZRK2ErM3VTUlFOMWtnekNuTDRHK25NK0RxazNhd3VMOGtMa0NVU0M0S2FhTmsrUHY1Vkg2U1hhUmd0a3l5OUJCSmxxTHlNRXZxY3BCVFBaaTVUOXhDWmQrYTJ4My9QWGtWSlV3MDR2d2x2YjdZT1U0YWpaa3NZSkk2SzlJbzdpdUFVMXZZWVQranVXMVZhSWhYZ21BNnRKSmh0cS9POUJuUlJGNktOQkx5SFpjUTRjeWZHWmhSTXI1OVQzRWFFNUVhTStGVDlqN2RoaWpYc1NHVUJWUGFMSDIrV2JSV2kzbFM3WXM5aEdtR2VwbEQrQzcrV0FSb3JEQldUOEhOQXJ1RTh1aUxaK3lIK2c0b3JDUTI3WmI0YTBjd0ZhamIreFFwbE5YbmVpdkdHM2VTTTBSOFBSUTRoNXM5RVZjRWh1dGhFVGpIUWdQOXp4UkJBMTZnQ0dTWStXQXdpRm90NHhvRUpDd2dzU3V3YzhseWpGTVdobnBDK1YyWDc0UzB5b21GZ0hHVUs5eGllRWI4SldpYlhHMUNxSTI5V1VBSWFQV3VMcm5YU2djWXJTL2tSdlVUV2xyZkdDNlk5N25VZjNOYXQrUEtubi9tOVhnaS9lSlF5bjlVMStlQktBeG1EZlN3akNtMjVpd2VXc2JUeGtQN0lyb2gvV0YrYkh1WUZNT3RmMTJCNDFwRGJueGoxL043SlViY2hpWkltODhHM2dFZTNSWEZBY0RrWHNyS0VhNTkzUzZGOG9HdXM3Q0J6RWExMG5nSzFTWGNQWTl1Z2tQN1BPakh1c0lmcWRzc2pNNjEyRUFzWmdMZWU1L2EvS3h0cWw0bU1IM1BjdUxQbWFwUnZBVElxaEo4TzJ3b2dHQ1JnV0lwcHpFTWVpcmdMR1dJMzQrNmliQzlNWENsZ2ZYaktyTFpwS1ViQ0s1eVNXWExwZm5WaWoxY1hlWlRHTlY3eldoQ2ZwNDNaeGppalAvbkpCOHljalhpa2YyVnk1c0NWMVF2SURqM1ljc1FFbjBZVlk3bDduaDNRSm4yQzlrSFMvV0xtSERwMDlXV0YyL0dndHloNWZOZzJFclZDN0hMOTNjZ25OZG1xczdJU1QwZFRlVjY0L3ZlVGthTDZ0V2VmWUZzUUtDeGhBeGJISTNCMHNVSHN5c2ZVSDVTTGpMT0JXMjJsam9zVmZERFZ0TjMvUU95VWJCY05ITXgwYkZHMDdtTEtRa1d3YzE3RmR2a2V1bkVDMjBQc1V6elc0akpMY2FTejBqNTRuR2tROUpCdVJ6ZWtOSkdxbnREQXhjN3lRVDdnWWFNSkkwTmVucldGSUFlYk0xVmZTeTErTVRTWWJtWG1OcHk1d2o3SVR1dkZYZVhWYVk4N3VHeHdOY0hSbng0NXpBeUdiMmhkWms5ZVJVWXFaWW9MU01ESTN6SHlaem40bGtaS291bVBURDY3ZDhzUkJIeWpDd1F0TE1Zd0lUNDQ0dVNrVHhDSFdROVRpaGFHRDZQQmhoMGthZThBNDQwcGMwUE1DNWtNWjVBYTN4S0dGRDhFRXMvOWs3cTl3M0liUUpPSWtyL1FyeTNLbG5yRk1HS2U3alA5eUFkU0kySjJVWTVOeFJGZnNCckc4dGNqNmpERW1BMnh1STVDUThoOTlrdXlFbG4wV3NqM3JTQVduemNodExKbzBmOEdxay80bjRtcVV0bERsbFkwNG1XbW1EeFBuNzlpbjdFRVd4MWNlY0p0eDhOaHJNWGxsZUNYYi8zalIvdlZScEVxZFRwVEk5N3VndDE4K2NWZEt3bWFUbVMvSmxmMmVObHA5eVc0MWorWlNGZTk0RnlaQjJ1MXJNTHVvWm5RZ0hBV0Zqa2RHckN4aGdWeUc4M1F3MDhFR2xlUlJsL0JnWk5BRktUYzlwTjJzZFhMMkk4dytUT1dlVFNhUER2SW14TlVXN1dHeThDSGF2bWJ1a1J0RUthT3J6K083LzBsYm1MTDVZdlFlWTQyM3czd24vYjMrUTMrUnZpQkVuWVhHRnh4Y1EvZDZzUS9uZlRNOFFtMkUzWWRZUjduRVhybTlMbktmd09QRUNybDlTeEZiTjMwK3ZVSkVBbW44eHlCRW1Jc3A3RzdLdEpueXRkRzVsbHlSQ0JMSjBZRXdvREdtT25UbHVUOFdRZnUvdEdva3ltN1RGdlh4dytMQXoyR3N0dERZSVNUMFNoOFhrTjIyc21ob3FjOWpqanBqZXdZTTFIU0ZVaVE0aWdEaHIxSU84TVZtbk1MOXVkeDI4UDU1UUVhdmwrQzFIMzNnM1pWRFBHM0tvS2M4RWhwSFVGMEJjYmxiOTJTQ2R6NUEyWFp2UWl0Z1AwYURUV254V0taWSs1eEh5VXFBVGhNaCtUZ25yUFRtaGFCVExWcWJJZjh4MmtkR2hrdW5tOWJDUm5TYnl4Q2dUc2dndysvNkwyeUFBUjVCMVFnZDJmUlhYZGdIemZLTWZXdlZsR2poTjNZYkhpR2NsMWpQSnlZLzE2S0U2Unh3eVIzVUZ5OG92RlBESG5qQjBOamRhMFZBbFJ1b0JJaVY1elpqd2cxaWZ6bURQZkprNDZHcnVYenlUMFhjRDlSaHh3MTkreHEyK200ZHd1dFhLSndUMkZ2STV1b2pUYTJzQUY4ZG1tZC9IdkVheUcxd2IzdFhJSGZrNlUybm5FSTVTV1BPN2xTUXlaMTIxbXRETlV2UWZrQnpiRUpuckVOQzZLYzBJYVJVL2ExK1hXUEw5RXMwNm5OZ3loby93b2Q2c1JnQmhXeWY3cTJXZDVyTlVLVUFybm9OSDQ2MUdpc1l5c2d3YTFSUHRjcWhmNzFzVnp4TWkyMHhOMHlKaXpDU2dKL0JrV0NBM0NGd2lhQ2FtTEVFTVJYMnpGVWhWbDNVNFVBY2YrNHdBUkpNZENQMjhPc2JWd0NFRUNONjAveWgwR0IwRC9NbENKNm1IbEcvRmJ2RE9NNm1RdXFRMWVLbFp6S3VyZmlXR2MrdkZRQ3N6MzcrYTZTTERSSHVyb1ZnQW8yRG9UVTZqRlREd3Rteit1c01YclQ3K2tZeVlqa1E2WmhBaC9FamNnUUg3bHg2QVpzMUhFSXBQUUdyUHo1RHFxejZHdFBLSnRTV1VmK1gvZm1ldFduQVVkcmxzMjBaY0YrcEdEc25BK0F5ZFM0eGRNZmd1OG1HQnc5VnUza3l6T1R5THhCSUV0VWFCelJnU1FvUExseWNMcU1PVmFKN3BEeVJ6WHNXazZLYnZkSWsyMlMyUmo3cWZxajBxbmtsenpFTHpqZjY0bXp4dmVNZlRkdFRPc21jQ0JITjZvUHFCZkI5c2IxUWs0SzdCUU9rR0Rad1hIUXNpa2ZsUUpjTnllU3AyZ3B5QUMyMHhsb1VkY0p4UUJMSUZpQWZaZWovbVN4YzBYK0lDY1RQMEFhL0N0ZTc1b01qSFVxNEJUdFFERmgrMXEyS3JvQ3VLaWxaVnBJUWlVc1FmTlZWWW0ydGtDZndFbWgzSnpRMDVUWFovMEY5eUJlWWhKODBFMXNvcTNQS0xxL1pXRWpBYUdQS1J0bUZYMDVQTHRIRlRHbHN4dFAyUDBhWDMrL1BoTXQzbk1kR09NYnBjZCtGMjNha3lVMm1IVGtGRVVEYm9LRlNiQktldUtuaDl4dURYeFdyUEtuMCtQOW9xT3FveVJES24vVVZraW5YZG5aTTFtaFViMlhoWTR6cXBqY1JHb2RhMXdkMW42MmxEeXV4SVV3WkVvUDI3K3ZYYjVveXFiQzZwNG9abHI1dGpXNzltS3puNUIwUEg3bmxuTmMyZWMvNE95REgxQmtEcnl2RitGakl4MnRtZlJaUi9nUWZmMmgwbmNMNGN4dzlUU0F2aGxoMWhzQ1hCdnFFRjJuclEwZjVFS0dMTDN0RkZSOEpWejNXY05iRlpQaTlwcTM3Mk1vTlJsa3Z3TVZ2V05mblY3UkdTeXg3dVh1WVhLWDJLNWd5aGFjcDFHZyttWWpXdE16OWl4OFVaZmtoSHZNa3hJb3AwYlN4ck94Wnc1T3A2ZXpNWWJ1ZGJkVjJOM0xRQlRzenlkYUx0dWJ2ZExleVljNTNkaEhmZz09LnBQaVlXdWYzUjhObU5oZUhDS29Bc0xNOTFQdUpMUU43WXJXdmZlVXVLSlhMYzZrWGlmUGR5d0ZnZndNXzNxcm9yWnlpNE02dEI3YnFxQl9PWUNvcURR"/><input type="hidden" name="_eventId" value="submit"/><input type="hidden" name="geolocation"/><input type="hidden" name="fpVisitorId"/><input 
+                       name="submit1"
+                       type="submit"
+                       value="Login1"
+                       style="display:none; width: 100%"
+                /><div id="loginError1">
+                        </div>
+
+  <script type="text/javascript">
+    var currentMenu = null;
+    if (currentMenu == "1") {
+      var containerFormInput = $("#fm1Input");
+      var containerForm = $("#fm1");
+      var originalUsername = null;
+      if (originalUsername == null) {
+        originalUsername = null;
+      }
+      var hasErrors = false;
+      var errors = [];
+
+      // console.log("trigger processLoginError, passwordLogin");
+      // processLoginError(containerFormInput, containerForm, originalUsername, hasErrors, errors, "passwordLogin");
+      console.log("init processLoginError", "passwordLogin");
+      loginError = {
+          containerFormInput: containerFormInput,
+          containerForm: containerForm,
+          originalUsername: originalUsername,
+          hasErrors: hasErrors,
+          errors: errors,
+          loginType: "passwordLogin",
+      };
+    }
+  </script>
+
+            </form>
+
+            <form method="post" id="fm2" action="login" style="display: none;">
+                <input type="hidden" id="username" name="username" v-model="smsCodeLoginUsername" autocomplete="new-username"/><input type="hidden" id="password" name="password" v-model="smsCodeLoginPassword" autocomplete="new-password"/><input type="hidden" name="currentMenu" value="2"/><input type="hidden" name="failN" value="-1"/><input type="hidden" name="execution" value="54fad0be-18cb-4afc-84f4-f7a2bf670314_ZXlKaGJHY2lPaUpJVXpVeE1pSjkuTDgvbG5Ib05mNWE2Tjh0WnF2U3N0OUNYNFY4Yjc4T1VoelhteCtkaERiM3prKzlaTHV0WldlU1MvS2kxNmFJK2F3T2F1NnB4bGhpZDJkaGxyZWN1OC85Y2NHYzFaM3lhcHJSZlh0ZVUybE1PZERPV2tna2tGS0dJcUlDUTFFM2xLblpac0ZuV0ZHSGhoeEoyWW9DTlNqZlVBa3RsOW93bVRYdlhOcEphTWYzN1ZkaGlkNlJobFlhckZGUU84VTdHM0JONXh6NFY5OHlZY3VYVlRhZTNGdkx6ZUV6YS9KZys5ZU1WelBkckpMSmxuQ2dzU1pGUFBnTmJRSXhCZEtidFhZSkhhSjNmbEJFNmllK3NxOE1JSThSWHY3ZHhBS1Rvd1ZpbUt4aVgrMGFzR3ZEdXoyYmxhN2JZUE92ekRCUzc4UGo2QndFeWdiNlpJK2RjTmdiQmQvZEd5RTJXWVo3VllobzJJR1JIaE4vclpocjYzckN5bnRUSEN5R2dBaGNZS25tcmwwOHUrbkZxdDcwaUFHUXVKc1ZrUll1M0ZXb2pkZDVBQTBPS1NyOXRMRngwelRJZmtjQ3kxYmYyQmQ4SVJYZ2V1eHZKQmJ5bDdsTWgrc2VjcGtJQWVvNEVsVEFqMUFBYzRHS3BGRWlvVkw4KzdCd0hTcWlxYnkzRHVuTG5scXhubXdsSEticHl1OXV3NkU3SHY4OTRWQXFoYzFIdWNlZnlZb1VsL2dJOVo0ZTJKVHU4ajdaK3pybFJTME9NbFR1RkhPajdEalhEOGNXL0lDZUgweCtJbms3NFBZVU5DVmtWekJiOGNySVFnM05pai9tckFjbWMwNkk4c2w0aDh2YnIyTUtOMmZkbWp6ZHdpdHlKRHRnQ0RKc1BrWTI4VFI5dS9FUGRUK3g0Y2M5VVV2SjhWbTdWTzJhWGozanQrbXV3azg4OGxsNHJEY1dvajF0ZVI5MVc4d05ITEkwdnFJbGV0K0o3dlBCOVJ0YkpPQmxST2NoQmhINWQrbFV3TWZRUDdFb1RSTTNRdGZoSGkwTFpvbG0zeDNuVXhScVJzNUw1SldPUGZOQy93ZXlKVjFyVkVtU2JGblg0Tk9nQndDd3VLU0FNRkI3KzVwMTlTY3NrSG50ellQU25qY0oyWEpxSXVEQ0doR0NRRHoyemlUUTFFUHJRbmFjNTd4b2RSbnlycXp3WVBlMDNsVFN6VEh0Vys5VUloZ0FONW9ucnNjTkFiSE1SdDdGSy9hVmpSeng2QzhhRi9semJNYjBWQXNMZXIrOEZBWVFLUkZHM1MxcHA5b0JIeXN0a0pPOGgvNG50OE5yWWZseG5ad0thVlgybXV2OU8zdklkRm5GM0tkOGtVWFZpTnJlWXR6T3EvaHFNRE5LbFJzWVlMRGdaKzBHaHpocUc4bzlLUEw4VmMrN0JqN3RZV3NlV2Q2a2RXMHdQdVVGVHZnQncwWHp4ZGlhRmxMdGJLWVBvYnhtaUI5cGdpU2Q2NUdHdFREQWFIc0M2Z2hybllBaWJXQmtidmIvejZSbFpqRVBpZzg1THNNMnBUUUp1b3VpZUpBaEpLay9CcDRaZjhsOE14RkdLenpBSVpORndnNiszRWVmQkhyeG51WFZOMmJjSFBrNlJwc1F0RmhPczgzbFNLNFk1RVh2NEl1OFV2MkwyRUZaTFFZdHhMclNNTHhNNDNaNUJEUU4wZXNjV0d0SW1seWRzV01KVlRDRitXWXJYRlJ6MkM1TTVBWWlhYytqbXFEQXU0Q0lIZGRYK0FtbDcrWXpFSWlzeERSREh1SUpnSDFuVlpIQzUyZWkzOGxrQ0FrYkFtc1hjMjdQdDR1TC9wVFdoZ3N2Y0RTMVZySXNHTFBzeGpaZDZjMGdyeGlDVHhDRld5TnN4QithODRqQk1QY1hGU25QZDFNYXI1VG5uUzU5VmQyV2xrSU5TWFc1czc5Vjd1MUZLUktsdmt6WVA5a2hSZml1STdVd1dvbzgzOWVMR1NZR0NXRjI0MEdRaXQ4VWJQNGJWZGVwWTJGdUw1bGd6aUdUZTRoRXNPZFdnbnVNcHJKMzl0NFltcXNQdXcwQW02MlkvRDFQaDRad1pxSFNqUlJid2c3U0tTWDI0akdybjBFMTZ2RTczNU83eFVYbnNoZTVXd2cwd2J4TVNpMWVpOGJZUzMyelNUMVArN2hrYnpiVS9HTUd1WkF0ZjArajlXaldUZXJwN3NtZlNaaUl4amI2cGhpbmJDa1FHNEYxeE5kWmVsdTdXb2J2QmFjQmhScFFvRVduV290c2ZFMXFkVFgyVHYwbS83SVgxb29hcDZZem51MmlUMWdZdlpYVnlNdVVNYjdNQjFYREc0TWxZcHVyU0hPVXpoc0FuVllhRGFDUkZkYzlkWjdXRTlWWHIwL09MNzdHN0VSKzYxSXFGMHV4Njd2UTRPWXhEdVlMZTRmSnJKUmFnaVhuMHgyL0tub1VpOFhuTllTQ0phb2x0akwyYnVQTjUwRzVVTmo4ak1reWZyUXFpdDVtWDFpdVhqT0wzNDVScUVrNnQxTDhZb05KREhFM1RjemV4WitWWElJeXdWcEl0cVk5dVo4SUJLTWYyRXVoOTl5ZVFwZGUwUng4d1RxcnpTQ2EvUnF5Y0EzQWdEeFY1Q1BEYlpBaytVYjlwVXhvWVdGdmxUN2drTUl6WjNmWWZEaktweEsyUXJNaVBNWENYR3hYRmVXcjdwUE5qblhrTFpBNm1oazZxRG90RmNOU3hjazBwUlFIVUJCanpiSGhVK2Y3MTRHVmJ0VzAzc2d6L3oyVDc2cG1scjI5bFRjTkt3Tm5UMmFFUHB1dXlweXNTOWFHZ3pmVXVvQzFNdVN0SjlLV2U0bzdaZ01iNVRLWUR1Uy80MEtXVWNBdWY3MFl2enNqTkpDbWJlUTRPS2Nqd0hWdEtWczUxc0xuQlBjU1VDTXFWSkVSZW5CVmlZTTlUYjltWnc1b0NpMU9EemRaK1h2ZUhQYnJuNlhrYWQ0YTBpSktQR2taNlFwT3M1ZThibUVTN0s4bWp5NUNuV3N5cUJNTGQxT25DTUl0U2hMWHRIUndIelVDTFZLTEpNdEl3Tk5FWmQ3bVp5Y3NzcXo0MGJCN3VJbkNDZEpoNzY5MWtELzlFTGZ6YmZ1aWt5VVh2OHFnb3FJczZQSGV0MFZhR1VFemxtT1MvQXE0eFZ4UjhRYThKUkR2UzlHaXF6MVpZZHBrejFRS1doNy91NzZUWFpHcjJwcWJGVVQ4V1poUkRPeEJkbjh6bGFVSDJPTk5qS2VhYUF6SWh0aG53WDBtTTVUdXRuTURqM3pYbkdPNUpPNU9DRThpcmg1K2ttVlZ1K3M5bjFiVysvbWZTd3ZqV0E1SVp5b1pKcG1BR3FqVzkwSjFacnhBM0hkYnQ4QnluN1NYVGFzcENsallBMHdLTUwyTk43cGRZNG4xNHE5M2VVRERtOUlNOEZtdVY0QmpNQ3VwQ3NGdjBUUk9Db0J0TzdwbHM5ZzBKNEJieGlIYWd4WkN4dkFENVY3R254SnoySUFKaUJMd0NVam1MQmlnRktpNk1BaDhIcHEwcXZnS3Vzd0daSHZRK2ErM3VTUlFOMWtnekNuTDRHK25NK0RxazNhd3VMOGtMa0NVU0M0S2FhTmsrUHY1Vkg2U1hhUmd0a3l5OUJCSmxxTHlNRXZxY3BCVFBaaTVUOXhDWmQrYTJ4My9QWGtWSlV3MDR2d2x2YjdZT1U0YWpaa3NZSkk2SzlJbzdpdUFVMXZZWVQranVXMVZhSWhYZ21BNnRKSmh0cS9POUJuUlJGNktOQkx5SFpjUTRjeWZHWmhSTXI1OVQzRWFFNUVhTStGVDlqN2RoaWpYc1NHVUJWUGFMSDIrV2JSV2kzbFM3WXM5aEdtR2VwbEQrQzcrV0FSb3JEQldUOEhOQXJ1RTh1aUxaK3lIK2c0b3JDUTI3WmI0YTBjd0ZhamIreFFwbE5YbmVpdkdHM2VTTTBSOFBSUTRoNXM5RVZjRWh1dGhFVGpIUWdQOXp4UkJBMTZnQ0dTWStXQXdpRm90NHhvRUpDd2dzU3V3YzhseWpGTVdobnBDK1YyWDc0UzB5b21GZ0hHVUs5eGllRWI4SldpYlhHMUNxSTI5V1VBSWFQV3VMcm5YU2djWXJTL2tSdlVUV2xyZkdDNlk5N25VZjNOYXQrUEtubi9tOVhnaS9lSlF5bjlVMStlQktBeG1EZlN3akNtMjVpd2VXc2JUeGtQN0lyb2gvV0YrYkh1WUZNT3RmMTJCNDFwRGJueGoxL043SlViY2hpWkltODhHM2dFZTNSWEZBY0RrWHNyS0VhNTkzUzZGOG9HdXM3Q0J6RWExMG5nSzFTWGNQWTl1Z2tQN1BPakh1c0lmcWRzc2pNNjEyRUFzWmdMZWU1L2EvS3h0cWw0bU1IM1BjdUxQbWFwUnZBVElxaEo4TzJ3b2dHQ1JnV0lwcHpFTWVpcmdMR1dJMzQrNmliQzlNWENsZ2ZYaktyTFpwS1ViQ0s1eVNXWExwZm5WaWoxY1hlWlRHTlY3eldoQ2ZwNDNaeGppalAvbkpCOHljalhpa2YyVnk1c0NWMVF2SURqM1ljc1FFbjBZVlk3bDduaDNRSm4yQzlrSFMvV0xtSERwMDlXV0YyL0dndHloNWZOZzJFclZDN0hMOTNjZ25OZG1xczdJU1QwZFRlVjY0L3ZlVGthTDZ0V2VmWUZzUUtDeGhBeGJISTNCMHNVSHN5c2ZVSDVTTGpMT0JXMjJsam9zVmZERFZ0TjMvUU95VWJCY05ITXgwYkZHMDdtTEtRa1d3YzE3RmR2a2V1bkVDMjBQc1V6elc0akpMY2FTejBqNTRuR2tROUpCdVJ6ZWtOSkdxbnREQXhjN3lRVDdnWWFNSkkwTmVucldGSUFlYk0xVmZTeTErTVRTWWJtWG1OcHk1d2o3SVR1dkZYZVhWYVk4N3VHeHdOY0hSbng0NXpBeUdiMmhkWms5ZVJVWXFaWW9MU01ESTN6SHlaem40bGtaS291bVBURDY3ZDhzUkJIeWpDd1F0TE1Zd0lUNDQ0dVNrVHhDSFdROVRpaGFHRDZQQmhoMGthZThBNDQwcGMwUE1DNWtNWjVBYTN4S0dGRDhFRXMvOWs3cTl3M0liUUpPSWtyL1FyeTNLbG5yRk1HS2U3alA5eUFkU0kySjJVWTVOeFJGZnNCckc4dGNqNmpERW1BMnh1STVDUThoOTlrdXlFbG4wV3NqM3JTQVduemNodExKbzBmOEdxay80bjRtcVV0bERsbFkwNG1XbW1EeFBuNzlpbjdFRVd4MWNlY0p0eDhOaHJNWGxsZUNYYi8zalIvdlZScEVxZFRwVEk5N3VndDE4K2NWZEt3bWFUbVMvSmxmMmVObHA5eVc0MWorWlNGZTk0RnlaQjJ1MXJNTHVvWm5RZ0hBV0Zqa2RHckN4aGdWeUc4M1F3MDhFR2xlUlJsL0JnWk5BRktUYzlwTjJzZFhMMkk4dytUT1dlVFNhUER2SW14TlVXN1dHeThDSGF2bWJ1a1J0RUthT3J6K083LzBsYm1MTDVZdlFlWTQyM3czd24vYjMrUTMrUnZpQkVuWVhHRnh4Y1EvZDZzUS9uZlRNOFFtMkUzWWRZUjduRVhybTlMbktmd09QRUNybDlTeEZiTjMwK3ZVSkVBbW44eHlCRW1Jc3A3RzdLdEpueXRkRzVsbHlSQ0JMSjBZRXdvREdtT25UbHVUOFdRZnUvdEdva3ltN1RGdlh4dytMQXoyR3N0dERZSVNUMFNoOFhrTjIyc21ob3FjOWpqanBqZXdZTTFIU0ZVaVE0aWdEaHIxSU84TVZtbk1MOXVkeDI4UDU1UUVhdmwrQzFIMzNnM1pWRFBHM0tvS2M4RWhwSFVGMEJjYmxiOTJTQ2R6NUEyWFp2UWl0Z1AwYURUV254V0taWSs1eEh5VXFBVGhNaCtUZ25yUFRtaGFCVExWcWJJZjh4MmtkR2hrdW5tOWJDUm5TYnl4Q2dUc2dndysvNkwyeUFBUjVCMVFnZDJmUlhYZGdIemZLTWZXdlZsR2poTjNZYkhpR2NsMWpQSnlZLzE2S0U2Unh3eVIzVUZ5OG92RlBESG5qQjBOamRhMFZBbFJ1b0JJaVY1elpqd2cxaWZ6bURQZkprNDZHcnVYenlUMFhjRDlSaHh3MTkreHEyK200ZHd1dFhLSndUMkZ2STV1b2pUYTJzQUY4ZG1tZC9IdkVheUcxd2IzdFhJSGZrNlUybm5FSTVTV1BPN2xTUXlaMTIxbXRETlV2UWZrQnpiRUpuckVOQzZLYzBJYVJVL2ExK1hXUEw5RXMwNm5OZ3loby93b2Q2c1JnQmhXeWY3cTJXZDVyTlVLVUFybm9OSDQ2MUdpc1l5c2d3YTFSUHRjcWhmNzFzVnp4TWkyMHhOMHlKaXpDU2dKL0JrV0NBM0NGd2lhQ2FtTEVFTVJYMnpGVWhWbDNVNFVBY2YrNHdBUkpNZENQMjhPc2JWd0NFRUNONjAveWgwR0IwRC9NbENKNm1IbEcvRmJ2RE9NNm1RdXFRMWVLbFp6S3VyZmlXR2MrdkZRQ3N6MzcrYTZTTERSSHVyb1ZnQW8yRG9UVTZqRlREd3Rteit1c01YclQ3K2tZeVlqa1E2WmhBaC9FamNnUUg3bHg2QVpzMUhFSXBQUUdyUHo1RHFxejZHdFBLSnRTV1VmK1gvZm1ldFduQVVkcmxzMjBaY0YrcEdEc25BK0F5ZFM0eGRNZmd1OG1HQnc5VnUza3l6T1R5THhCSUV0VWFCelJnU1FvUExseWNMcU1PVmFKN3BEeVJ6WHNXazZLYnZkSWsyMlMyUmo3cWZxajBxbmtsenpFTHpqZjY0bXp4dmVNZlRkdFRPc21jQ0JITjZvUHFCZkI5c2IxUWs0SzdCUU9rR0Rad1hIUXNpa2ZsUUpjTnllU3AyZ3B5QUMyMHhsb1VkY0p4UUJMSUZpQWZaZWovbVN4YzBYK0lDY1RQMEFhL0N0ZTc1b01qSFVxNEJUdFFERmgrMXEyS3JvQ3VLaWxaVnBJUWlVc1FmTlZWWW0ydGtDZndFbWgzSnpRMDVUWFovMEY5eUJlWWhKODBFMXNvcTNQS0xxL1pXRWpBYUdQS1J0bUZYMDVQTHRIRlRHbHN4dFAyUDBhWDMrL1BoTXQzbk1kR09NYnBjZCtGMjNha3lVMm1IVGtGRVVEYm9LRlNiQktldUtuaDl4dURYeFdyUEtuMCtQOW9xT3FveVJES24vVVZraW5YZG5aTTFtaFViMlhoWTR6cXBqY1JHb2RhMXdkMW42MmxEeXV4SVV3WkVvUDI3K3ZYYjVveXFiQzZwNG9abHI1dGpXNzltS3puNUIwUEg3bmxuTmMyZWMvNE95REgxQmtEcnl2RitGakl4MnRtZlJaUi9nUWZmMmgwbmNMNGN4dzlUU0F2aGxoMWhzQ1hCdnFFRjJuclEwZjVFS0dMTDN0RkZSOEpWejNXY05iRlpQaTlwcTM3Mk1vTlJsa3Z3TVZ2V05mblY3UkdTeXg3dVh1WVhLWDJLNWd5aGFjcDFHZyttWWpXdE16OWl4OFVaZmtoSHZNa3hJb3AwYlN4ck94Wnc1T3A2ZXpNWWJ1ZGJkVjJOM0xRQlRzenlkYUx0dWJ2ZExleVljNTNkaEhmZz09LnBQaVlXdWYzUjhObU5oZUhDS29Bc0xNOTFQdUpMUU43WXJXdmZlVXVLSlhMYzZrWGlmUGR5d0ZnZndNXzNxcm9yWnlpNE02dEI3YnFxQl9PWUNvcURR"/><input type="hidden" name="_eventId" value="submitPasswordlessToken"/><input type="hidden" name="geolocation"/><input type="hidden" name="fpVisitorId"/><input 
+                       name="submit2"
+                       type="submit"
+                       value="Login2"
+                       style="display:none; width: 100%"
+                /><div id="loginError2">
+                        </div>
+
+  <script type="text/javascript">
+    var currentMenu = null;
+    if (currentMenu == "2") {
+      var containerFormInput = $("#fm2Input");
+      var containerForm = $("#fm2");
+      var originalUsername = null;
+      if (originalUsername == null) {
+        originalUsername = null;
+      }
+      var hasErrors = false;
+      var errors = [];
+
+      // console.log("trigger processLoginError, smsCodeLogin");
+      // processLoginError(containerFormInput, containerForm, originalUsername, hasErrors, errors, "smsCodeLogin");
+      
+      console.log("init processLoginError", "smsCodeLogin");
+      loginError = {
+          containerFormInput: containerFormInput,
+          containerForm: containerForm,
+          originalUsername: originalUsername,
+          hasErrors: hasErrors,
+          errors: errors,
+          loginType: "smsCodeLogin",
+      };
+    }
+  </script>
+
+            </form>
+
+
+            <form method="post" id="fm3" action="login" style="display: none;">
+                <input type="hidden" name="qrCodeKey" v-model="qrCodeStateKey" autocomplete="new-qrCodeKey" /><input type="hidden" name="currentMenu" value="3"/><input type="hidden" name="geolocation"/><input type="hidden" name="fpVisitorId"/><input class="btn btn-submit" name="_eventId_success" type="submit" value="Submit"/></form>
+
+    <div class="card mfa">
+
+    <el-dialog v-if="mfaEnabled"
+      class="dialog-wrap"
+      title="安全验证"
+      :visible.sync="guardDialogVisible"
+      width="506px"
+      height="420px"
+      :before-close="hideGuardDialog">
+
+      <div class="check-tips"><img src="/cas/themes/mf/images/tip.svg"></img>当前登录环境异常，需通过安全验证确认是本人操作后才可继续登录。请选择安全验证方式！</div>
+
+      <div class="type-wrap">
+        <el-row type="flex" align="center" justify="space-between">
+          <el-col :span="12" class="safe-flex">
+            <img class="safe-title-icon" :src="typeInfo[typeIndex].icon" :alt="typeInfo[typeIndex].title" :title="typeInfo[typeIndex].title"><span class="type-title">{{typeInfo[typeIndex].info}}</span>
+          </el-col>
+          <el-col :span="12" class="safe-flex safe-flex2">
+            <span class="other-title">其他方式</span>
+            <span v-for="(type,index) in typeInfo" :key="index">
+              <img :class='index==typeIndex?"safe-icon":"safe-title-icon"' style="cursor: pointer; margin-right: 6px;" v-if="typeInfo[index].enabled" :src="index==typeIndex?type.icon2:type.icon" :disabled="index==typeIndex" :alt="type.title" :title="type.title" @click="changeGuard(index)" ></span>
+          </el-col>
+        </el-row>
+      </div>
+
+      <div v-if="typeIndex==0" class="app-style" style="height: 100px;">
+        <div>点击发送验证请求后，请在 <span>超级APP</span> 上进行确认，完成安全验证</div>
+        <div class="code-wrap">
+          <div v-show="appPushCallbackCode" style="position: relative; text-align: center; font-size: 19px; margin-top: 15px;">确认码：{{appPushCallbackCode}}</div>
+          <div class="error-text" v-show="appPushStatusShowAlert" style="position: relative; text-align: center; font-size: 12px;">{{appPushStatusAlertMessage}}</div>
+        </div>
+      </div>
+      
+      <div v-if="typeIndex==1" class="phone-style-wrap" style="height: 160px; padding-bottom: 3px;">
+        <div class="phone-style" v-show="securePhone"><span>+86</span> {{securePhone}}</div>
+        <div class="code-wrap">
+          <el-input class="input-style" v-show="securePhone" v-model="securePhoneCode"></el-input>
+          <el-button type='text' class="code-text" v-show="securePhone" @click="securePhoneSend" :disabled="securePhoneSendDisabled">{{securePhoneSendText}}</el-button>
+          <div class="error-text" v-show="securePhoneValidShowAlert" style="position: relative; text-align: center; font-size: 12px;">{{securePhoneValidAlertMessage}}</div>
+          <div class="error-text" v-show="!securePhone" style="position: relative; text-align: center; font-size: 12px;">安全手机未绑定，无法使用安全手机验证</div>
+        </div>
+      </div>
+      
+      <div v-if="typeIndex==2" class="phone-style-wrap" style="height: 160px; padding-bottom: 3px;">
+        <div class="phone-style" v-show="secureEmail">{{secureEmail}}</div>
+        <div class="code-wrap">
+          <el-input class="input-style" v-show="secureEmail" v-model="secureEmailCode"></el-input>
+          <el-button type='text' class="code-text" v-show="secureEmail" @click="secureEmailSend" :disabled="secureEmailSendDisabled">{{secureEmailSendText}}</el-button>
+          <div class="error-text" v-show="secureEmailValidShowAlert" style="position: relative; text-align: center; font-size: 12px;">{{secureEmailValidAlertMessage}}</div>
+          <div class="error-text" v-show="!secureEmail" style="position: relative; text-align: center; font-size: 12px;">安全邮箱未绑定，无法使用安全邮箱验证</div>
+        </div>
+      </div>
+      
+      <div v-if="typeIndex==3" class="face-style-wrap" style="height: 160px; padding-bottom: 3px;">
+
+        <div class="qrcode" v-if='!qrCodeScanSuccess'>
+          <img v-if="qrCodeScanQrcode" :src="qrCodeScanQrcode"><div class="qrcode-reset-opacity" v-if='qrCodeStatusShowAlert'></div>
+          <div class="qrcode-reset-wrap" v-if='qrCodeStatusShowAlert' @click="qrCodeRefresh">
+            <i class="el-icon-refresh-right"></i>
+            <div>点击刷新二维码</div>
+          </div>
+        </div>
+        <div v-if='!qrCodeScanSuccess'>支持 {{qrCodeScanTypeNames}} 的扫一扫功能，完成安全验证</div>
+
+        <div class="face-sucess" v-if='qrCodeScanSuccess && qrCodeStatusShowAlert'>
+          <img src="/cas/themes/mf/images/safe/dui.png"><div>{{qrCodeStatusAlertMessage}}</div>
+        </div>
+        <div v-if='qrCodeScanSuccess && qrCodeStatusShowAlert' v-show="qrCodeCallbackCode" style="position: relative; text-align: center; font-size: 19px; margin-bottom: 15px;">确认码：{{qrCodeCallbackCode}}</div>
+        <div v-if='qrCodeScanSuccess && qrCodeStatusShowAlert'>请在手机上点击同意以完成安全验证</div>
+      </div>
+      
+      <div v-if="typeIndex==4" class="face-style-wrap" style="height: 160px; padding-bottom: 3px;">
+        <div class="qrcode" v-if='!faceVerifyScanSuccess'>
+          <img v-if="faceVerifyScanFaceverify" :src="faceVerifyScanFaceverify"><div class="qrcode-reset-opacity" v-if='faceVerifyStatusShowAlert'></div>
+          <div class="qrcode-reset-wrap" v-if='faceVerifyStatusShowAlert' @click="faceVerifyRefresh">
+            <i class="el-icon-refresh-right"></i>
+            <div>点击刷新二维码</div>
+          </div>
+        </div>
+        <div v-if="!faceVerifyScanSuccess">打开 <span>超级APP</span> 扫一扫功能，扫描二维码进行人脸识别，完成安全验证</div>
+        
+        <div class="face-sucess" v-if='faceVerifyScanSuccess && faceVerifyStatusShowAlert'>
+          <img src="/cas/themes/mf/images/safe/dui.png"><div>{{faceVerifyStatusAlertMessage}}</div>
+        </div>
+      </div>
+      
+      <span slot="footer" class="dialog-footer" style="height: 50px; display: block;">
+        <el-button type="primary" v-if="typeIndex==0" @click="appPushSend" :disabled="appPushSendDisabled">{{appPushSendText}}</el-button>
+
+        <el-button type="primary" v-if="typeIndex==1" v-show="securePhone" @click='securePhoneValid' :disabled="!securePhoneCode">确 定</el-button>
+        <el-button type="primary" v-if="typeIndex==2" v-show="secureEmail" @click='secureEmailValid' :disabled="!secureEmailCode">确 定</el-button>
+
+      </span>
+
+    </el-dialog>
+
+            </div>
+  
+  </div>
+  
+  </div>
+
+<script type="text/javascript">
+
+function getQueryString(paramName) {
+  var reg = new RegExp("(^|&)" + paramName + "=([^&]*)(&|$)");
+  var r = window.location.search.substr(1).match(reg);
+  if (r != null) return unescape(r[2]);
+  return "";
+}
+
+var isDebug = getQueryString("debug") != null && getQueryString("debug") != "";
+
+var isMobile = navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i) != null;
+
+var mobilePattern = new RegExp("^1[0-9]{10}$", 'i');
+
+var registeredServiceName = null;
+console.log("registeredServiceName", registeredServiceName);
+
+var globalI18n = eval('(' +"{\"screen.notice.button.close\":\"\u6211\u77E5\u9053\u4E86\",\"screen.welcome.button.loginwip\":\"\u7A0D\u7B49\u7247\u523B\u2026\u2026\",\"screen.pm.button.forgotpwd\":\"\u5FD8\u8BB0\u5BC6\u7801\uFF1F\",\"screen.rememberme.checkbox.title\":\"\u8BB0\u4F4F\u6211\",\"screen.pm.button.submit\":\"\u63D0\u4EA4\",\"screen.pm.button.downloadapp\":\"\u4E0B\u8F7D APP\",\"screen.pm.button.cancel\":\"\u53D6\u6D88\",\"cas.login.by.password\":\"\u8D26\u53F7\u5BC6\u7801\u767B\u5F55\",\"screen.welcome.label.browsersupport\":\"\u6D4F\u89C8\u5668\u652F\u6301\",\"screen.welcome.label.mobile.placeholder\":\"\u8BF7\u8F93\u5165\u624B\u673A\u53F7\",\"screen.captcha.warning\":\"\u60A8\u7684\u64CD\u4F5C\u7591\u4F3C\u5F02\u5E38\uFF0C\u8BF7\u8F93\u5165\u56FE\u5F62\u9A8C\u8BC1\u7801\",\"dingtalk\":\"\u9489\u9489\",\"screen.welcome.label.password\":\"\u5BC6\u3000\u7801:\",\"workweixin\":\"\u4F01\u4E1A\u5FAE\u4FE1\",\"screen.loginnotice.button.close\":\"\u6211\u77E5\u9053\u4E86\",\"cas.login.by.scan\":\"\u626B\u7801\u767B\u5F55\",\"screen.welcome.label.captcha.placeholder\":\"\u8BF7\u8F93\u5165\u56FE\u7247\u9A8C\u8BC1\u7801\",\"screen.welcome.label.dynamiccode.placeholder\":\"\u8BF7\u8F93\u5165\u52A8\u6001\u5BC6\u7801\",\"qq\":\"\u817E\u8BAFQQ\",\"alipay\":\"\u652F\u4ED8\u5B9D\",\"screen.loginnotice.button.view\":\"\u67E5\u770B\",\"screen.notice.title\":\"\u8FD0\u7EF4\u516C\u544A\",\"screen.welcome.label.captcha\":\"\u9A8C\u8BC1\u7801:\",\"screen.welcome.label.netid\":\"\u7528\u6237\u540D:\",\"cas.login.by.sms\":\"\u624B\u673A\u52A8\u6001\u7801\u767B\u5F55\",\"screen.welcome.label.captcha.refresh\":\"\u770B\u4E0D\u6E05\uFF0C\u6362\u4E00\u5F20\uFF01\",\"screen.welcome.label.password.placeholder\":\"\u8BF7\u8F93\u5165\u767B\u5F55\u5BC6\u7801\",\"screen.captcha.title\":\"\u5B89\u5168\u9A8C\u8BC1\",\"screen.scan.button.refresh\":\"\u5237\u65B0\u4E8C\u7EF4\u7801\",\"openweixin\":\"\u5FAE\u4FE1\",\"screen.welcome.button.send.token\":\"\u53D1\u9001\u52A8\u6001\u7801\",\"screen.welcome.label.mobile\":\"\u624B\u673A\u53F7:\",\"screen.welcome.label.dynamiccode\":\"\u52A8\u6001\u7801:\",\"screen.welcome.label.netid.placeholder\":\"\u8BF7\u8F93\u5165\u7528\u6237\u540D\",\"screen.welcome.label.loginwith\":\"\u5176\u4ED6\u65B9\u5F0F\u767B\u5F55\",\"screen.pm.button.activeaccount\":\"\u6FC0\u6D3B\u8D26\u53F7\",\"screen.welcome.button.sendwip\":\"\u5DF2\u53D1\u9001\",\"screen.welcome.button.sending\":\"\u53D1\u9001\u4E2D\u2026\u2026\",\"screen.welcome.button.login\":\"\u767B\u5F55\",\"screen.loginnotice.title\":\"\u767B\u5F55\u516C\u544A\"}"+ ')');
+console.log("globalI18n", globalI18n);
+var globalConfig = eval('(' +"{\"requestPerIPRateLimiter_enabled\":\"false\",\"casServerPrefix\":\"https:\/\/authserver.imut.edu.cn\/cas\",\"userLogin.kickoutEnabled\":\"false\",\"hmSiteId\":\"d605d8df6bf5ca8a54fe078683196518\",\"requestPerIPRateLimiter.requestsPerRateTime\":\"10\",\"isSuperApp\":false,\"lockTimeIntervalInfo\":\"3 \u5206\u949F\",\"isWechat\":false,\"secStrategyDynamic\":\"true\",\"secTypeFaceVerify\":\"false\",\"scanClientInfo\":\"\u4F7F\u7528\u4F01\u4E1A\u5FAE\u4FE1APP\u626B\u7801\u767B\u5F55\",\"accountAbnormal.kickoutEnabled\":\"false\",\"refererLimit\":\"false\",\"superappName\":\"\u8D85\u7EA7APP\",\"localeEnabled\":\"false\",\"activeAccountRedirectUrl\":\"https:\/\/authx-service.imut.edu.cn\/active-account\",\"mfaEnabled\":\"true\",\"isMobile\":false,\"secTypeSecurePhone\":\"true\",\"logoM\":\"cas-server-site-ui__3a7d52e0-d005-4219-b189-a9ad46c3d3cf__app_logo2.png\",\"netidPlaceholder\":\"\u8BF7\u8F93\u5165\u5B66\u5DE5\u53F7-\u8D26\u53F7\/\",\"lockTimeIntervalInSecond\":180,\"rememberMe_timeToKillInSeconds\":\"0\",\"captchaSkipN\":\"1\",\"mfaTypeQrCode\":\"false\",\"userPasswordChanged_kickoutEnabled\":\"false\",\"secTypeAppPush\":\"false\",\"bg\":\"cas-server-site-ui__d2a8dc02-0e5c-49d6-a9e1-bf0dd3aa61a4__11.png\",\"isDingtalk\":false,\"mobileEnabled\":false,\"passwordPlaceholder\":\"\u8BF7\u8F93\u5165\u767B\u5F55\u5BC6\u7801\",\"mfaStrategyDynamic_userNonCompletedSkip\":\"true\",\"mfaStrategyStatic\":\"false\",\"loginNoticeShowMode\":\"1\",\"rememberMe.timeToKillInSeconds\":\"0\",\"inputMessageType\":\"default\",\"encryptEnabled\":\"true\",\"mfaStrategyDynamic.userNonCompletedSkip\":\"true\",\"mfaTypeAppPush\":\"false\",\"inputMessage\":\"\u8BF7\u8F93\u5165\u5B66\u5DE5\u53F7-\u8D26\u53F7\/\",\"mfaTypeSecureEmail\":\"false\",\"customEntryName\":\"\u5FEB\u901F\u5165\u53E3\",\"mfaStrategyDynamic.ipDetectorType\":\"FPIP\",\"mfaStrategyDynamic.recentIpSilenceInDays\":\"30\",\"showLogo\":\"true\",\"successRedirectUrl\":\"https:\/\/authx-service.imut.edu.cn\",\"iconImageUrl\":\"cas-server-site-ui__98a7996b-5e46-4801-b7fc-8b0be5e7c2d8__APP\u4E0B\u8F7D\u4E8C\u7EF4\u7801.png\",\"language\":\"zh\",\"rememberPasswordEnabled\":\"false\",\"bg2\":\"cas-server-site-ui__066e051f-a1d6-4860-b7fc-815ffe86ea42__33.png\",\"bg1\":\"cas-server-site-ui__8f5b9a36-cd39-4055-9724-33015d7af777__22.png\",\"lockTimeLengthInSecond\":480,\"mfaStrategyDynamic\":\"true\",\"emailAddressEnabled\":false,\"isWxamp\":false,\"logo\":\"cas-server-site-ui__a2323655-6e52-49ca-a79f-b28dcdc75dd9__\u8BA4\u8BC1logo.png\",\"requestPerIPRateLimiter.enabled\":\"false\",\"requestPerIPRateLimiter.rateTime\":\"60\",\"webFavicon\":\"\/themes\/classic\/favicon.ico\",\"secTimeSilenceInMinutes\":\"10\",\"forgotPasswordRedirectUrl\":\"https:\/\/authx-service.imut.edu.cn\/find-pwd\",\"bgM\":\"\/themes\/classic\/images\/bg.png\",\"secTypeSecureEmail\":\"true\",\"mfaFirstNeed\":\"false\",\"requestUriForRateLimit\":\"POST \/cas\/login,POST \/cas\/mfa\/detect\",\"userLogin_kickoutEnabled\":\"false\",\"schemeColor\":\"00426E\",\"mfaTypeFaceVerify\":\"false\",\"MF_SERVER_URL\":\"https:\/\/authserver.imut.edu.cn\/mf-remote\",\"smsCodeEnabled\":false,\"mfServerUrl\":\"https:\/\/authserver.imut.edu.cn\/mf-remote\",\"requestPerIPRateLimiter_requestsPerRateTime\":\"10\",\"logoutReturnUrl\":\"http:\/\/i.imut.edu.cn\",\"lockErrorTimes\":5,\"qrCodeEnabled\":true,\"userPasswordChanged.kickoutEnabled\":\"false\",\"mfaTypeSecurePhone\":\"true\",\"lockTimeLengthInfo\":\"8 \u5206\u949F\",\"mfaStrategyDynamic_ipDetectorType\":\"FPIP\",\"webTitle\":\"\u5185\u8499\u53E4\u5DE5\u4E1A\u5927\u5B66\",\"mfaStrategyDynamic_recentIpSilenceInDays\":\"30\",\"secEnabled\":\"true\",\"isWorkweixin\":false,\"secStrategyStaticFirst\":\"false\",\"priorityPcWay\":\"account\",\"mfLayout\":\"remote\",\"requestPerIPRateLimiter_rateTime\":\"60\",\"identityNoEnabled\":true,\"accountAbnormal_kickoutEnabled\":\"false\"}"+ ')');
+globalConfig.registeredServiceName = registeredServiceName;
+console.log("globalConfig", globalConfig);
+
+
+var dialogVisible = false;
+
+var superappName = "\u8D85\u7EA7APP";
+
+// account 账号密码、smsCode 手机动态密码、qrCode 扫码登录
+var priorityPcWay = "account";
+
+// 1 账号密码、2 手机动态密码、3 扫码登录
+var defaultMenu = "1";
+if (priorityPcWay) {
+  if (priorityPcWay == "account") {
+    defaultMenu = "1";
+  }
+  else if (priorityPcWay == "smsCode") {
+    defaultMenu = "2";
+  }
+  else if (priorityPcWay == "qrCode") {
+    if (!isMobile) {
+      defaultMenu = "3";
+    }
+  }
+}
+console.log("defaultMenu", defaultMenu);
+
+
+var loginType = getQueryString("loginType");
+
+var qrCodeEnabled = true;
+var currentMenu = null;
+var isQrcode = false;
+
+if (currentMenu) {
+  
+} else {
+  if (loginType === "") {
+    currentMenu = defaultMenu;
+  } else {
+    currentMenu = loginType;
+  }
+}
+
+if (currentMenu == 3) {
+  if (qrCodeEnabled == true || qrCodeEnabled == 'true') {
+    currentMenu = defaultMenu;
+    isQrcode = true;
+  } else {
+    currentMenu = defaultMenu;
+    isQrcode = false;
+  }
+}
+console.log("isQrcode", isQrcode);
+console.log("currentMenu", currentMenu);
+
+var localeEnabled = "false";
+var language = "zh";
+console.log("language", language);
+
+
+// var icon = "\/cas\/file\/png\/icon.png";
+var logo = "\/cas\/file\/png\/logo.png" +"?"+encodeURIComponent(globalConfig.logo);
+var bg = "\/cas\/file\/png\/bg.png" +"?"+encodeURIComponent(globalConfig.bg);
+
+var logoM = "\/cas\/file\/png\/logoM.png" +"?"+encodeURIComponent(globalConfig.logoM);
+var bgM = "\/cas\/file\/png\/bgM.png" +"?"+encodeURIComponent(globalConfig.bgM);
+
+var bg1 = "\/cas\/file\/png\/bg1.png" +"?"+encodeURIComponent(globalConfig.bg1);
+var bg2 = "\/cas\/file\/png\/bg2.png" +"?"+encodeURIComponent(globalConfig.bg2);
+var bg3 = "\/cas\/file\/png\/bg3.png" +"?"+encodeURIComponent(globalConfig.bg3);
+
+var ppts = [];
+var backgrounds = [];
+
+if (ppts != null) {
+  for (var i = 0; i < ppts.length; i++) {
+    backgrounds[i] = ppts[i].fileurl;
+  }
+}
+
+if (backgrounds == null || backgrounds.length == 0) {
+  backgrounds = [ bg ];
+  if (globalConfig.bg1) {
+    backgrounds.push(bg1);
+  }
+  if (globalConfig.bg2) {
+    backgrounds.push(bg2);
+  }
+  if (globalConfig.bg3) {
+    backgrounds.push(bg3);
+  }
+}
+
+
+var customEntryLinks = [];
+
+var customEntryLink1Name = null;
+var customEntryLink1Url = null;
+var customEntryLink2Name = null;
+var customEntryLink2Url = null;
+var customEntryLink3Name = null;
+var customEntryLink3Url = null;
+var customEntryLink4Name = null;
+var customEntryLink4Url = null;
+
+if ( (customEntryLink1Name!=null && customEntryLink1Name!='') && (customEntryLink1Url!=null && customEntryLink1Url!='') ) {
+  customEntryLinks.push({"name":customEntryLink1Name, "url":customEntryLink1Url});
+}
+if ( (customEntryLink2Name!=null && customEntryLink2Name!='') && (customEntryLink2Url!=null && customEntryLink2Url!='') ) {
+  customEntryLinks.push({"name":customEntryLink2Name, "url":customEntryLink2Url});
+}
+if ( (customEntryLink3Name!=null && customEntryLink3Name!='') && (customEntryLink3Url!=null && customEntryLink3Url!='') ) {
+  customEntryLinks.push({"name":customEntryLink3Name, "url":customEntryLink3Url});
+}
+if ( (customEntryLink4Name!=null && customEntryLink4Name!='') && (customEntryLink4Url!=null && customEntryLink4Url!='') ) {
+  customEntryLinks.push({"name":customEntryLink4Name, "url":customEntryLink4Url});
+}
+
+var showLink = customEntryLinks.length>0;
+var showLessLink = customEntryLinks.length<4;
+
+
+var loadComponent = null;
+
+//
+var layoutCom = null;
+var backgroudCom = null;
+var logoCom = null;
+var languageCom = null;
+var announcementCom = null;
+var noticeCom = null;
+var customLinkCom = null;
+var copyrightCom = null;
+var browserSupportCom = null;
+
+var passwordLoginCom = null;
+var smsCodeLoginCom = null;
+var scanLoginCom = null;
+var federatedLoginCom = null;
+var quickLinkCom = null;
+var noticeBoardCom = null;
+
+
+var _superappDownloadQrCodeImgUrl="\/cas\/qr\/generator.png";
+
+var _federatedUrls = [{"name":"\u4F01\u4E1A\u5FAE\u4FE1","redirectUrl":"\/federatedRedirect?federatedName=workweixin","type":"workweixin","cssClass":"","autoRedirect":false}];
+
+var _backgrounds = backgrounds;
+var _logo = logo;
+var _language = language;
+
+
+var _i18n = globalI18n;
+var _config = globalConfig;
+
+</script>
+
+<!-- 登录表单 提交 --><script type="text/javascript">
+
+function submitFm1() {
+  // $("#fm1").submit();
+  $("#fm1").find(":submit").click();
+}
+function submitFm2() {
+  // $("#fm2").submit();
+  $("#fm2").find(":submit").click();
+}
+
+<!-- 城市热点 -->
+function submitFm9() {
+  // $("#fm9").submit();
+  $("#fm9").find(":submit").click();
+}
+
+</script>
+
+<!-- 城市热点 --><script type="text/javascript">
+
+var drcomIPLoginEnabled = false == true;
+var drcomIPSuccess = null == true;
+var isDrcomIPLoginAuto = drcomIPLoginEnabled && drcomIPSuccess && ((localStorage.isDrcomIPLoginAuto || "false") == "true");
+
+</script>
+
+
+<!-- 双因子 --><script type="text/javascript">
+
+//双因子
+var mfaEnabled = "true" == "true";
+
+var mfaTypeAppPush = "false" == "true";
+var mfaTypeSecurePhone = "true" == "true";
+var mfaTypeSecureEmail = "false" == "true";
+var mfaTypeQrCode = "false" == "true";
+var mfaTypeFaceVerify = "false" == "true";
+
+if (isMobile) {
+  mfaTypeQrCode = false;
+}
+
+var defaultTypeIndex = 0;
+if (mfaTypeAppPush) {
+  defaultTypeIndex = 0;
+} else if (mfaTypeSecurePhone) {
+  defaultTypeIndex = 1;
+} else if (mfaTypeSecureEmail) {
+  defaultTypeIndex = 2;
+} else if (mfaTypeQrCode) {
+  defaultTypeIndex = 3;
+} else if (mfaTypeFaceVerify) {
+  defaultTypeIndex = 4;
+}
+
+function mfaDetect() {
+  if (!mfaEnabled) {
+    submitFm1();
+    return;
+  }
+  
+  var username = $("#fm1").find("#username").val();
+  var password = $("#fm1").find("#password").val();
+  var fpVisitorId = $("#fm1").find('[name="fpVisitorId"]').val();
+
+  if (encryptEnabled && password.indexOf('__RSA__') < 0) {
+    var encodedPassword = "__RSA__"+encrypt.encrypt(password);
+    password = encodedPassword;
+  }
+
+  var url = "\/cas\/mfa\/detect";
+//  url += "?username=" + username;
+  $.ajax({
+    url: url,
+    type: "POST",
+    dataType: "json",
+    data: "username=" + encodeURIComponent(username)+"&password=" + encodeURIComponent(password)+"&fpVisitorId="+encodeURIComponent(fpVisitorId),
+    success: function success(r) {
+      console.log(url, r);
+      if (r && r.code == 0) {
+        var state = r.data.state;
+        $("#fm1").find('[name="mfaState"]').val(state);
+
+        var need = r.data.need;
+        if (need == true) {
+          $("#showGuardDialog").click();
+        } else {
+          submitFm1();
+        }
+      } else {
+        console.log(r);
+        // submitFm1();
+      }
+    },
+    error: function error(err) {
+      console.log(err);
+      // submitFm1();
+    }
+  });
+
+}
+</script>
+
+<!-- 账号激活、忘记密码 链接地址 --><script type="text/javascript">
+function __newForgotYourPassword() {
+  return "\/cas\/personal\/forgotYourPassword?service=";
+}
+
+function __newActiveYourAccount() {
+  return "\/cas\/personal\/activeYourAccount?service=";
+}
+</script>
+
+<!-- 扫码登录 --><script type="text/javascript">
+
+var __qrcodeImgUrl = "\/cas\/qr\/qrcode";
+var __qrCometUrl = "\/cas\/qr\/comet";
+
+var __qrcodeCometTimeout = 0;
+
+function __newQrCodeImgUrl() {
+  var qrcodeImgUrl = __qrcodeImgUrl+"?r=" +(new Date()).getTime()+ Math.floor(Math.random()*24) + (isDebug?"&debug=debug":"");
+  return qrcodeImgUrl;
+}
+
+function __renewQrCodeStatus(isQrcodeAlert, qrcodeAlertMessage, stateKey, clearTimeout) {
+  scanLoginCom.isQrcodeAlert = isQrcodeAlert;
+  scanLoginCom.qrcodeAlertMessage = qrcodeAlertMessage;
+
+  vm.qrCodeStateKey = stateKey; // console.log(vm.qrCodeStateKey, stateKey);
+  
+  if (clearTimeout) {
+    window.clearTimeout(__qrcodeCometTimeout);
+  }
+}
+
+function __refreshQrCode() {
+  scanLoginCom.qrcodeImgUrl = __newQrCodeImgUrl();
+  
+  __renewQrCodeStatus(false, '', '', true);
+  
+  __startQrComet();
+}
+
+function __startQrComet() {
+  window.clearTimeout(__qrcodeCometTimeout); // 开启定时
+
+  function qrComet() {
+    var url = __qrCometUrl;
+    $.ajax({
+      url: url,
+      type: "POST",
+      dataType: "json",
+      timeout: 1000,
+      success: function success(r) {
+        // console.log(r);
+        if (r && r.code == 0) {
+          var stateKey = r.data.stateKey;
+          var qrCode = r.data.qrCode;
+
+          if (qrCode.status == "1") {
+            // 1 创建、未扫码
+            __renewQrCodeStatus(false, '', '');
+          } else if (qrCode.status == "2") {
+            // 2 已扫码
+            __renewQrCodeStatus(true, '扫码成功', '');
+          } else if (qrCode.status == "3") {
+            // 3 已授权
+            __renewQrCodeStatus(true, '确认登录', stateKey, true);
+            window.setTimeout(function () {
+              $("#fm3").submit();
+            }, 500);
+          } else if (qrCode.status == "4") {
+            // 4 已取消
+            __renewQrCodeStatus(true, '取消登录', '', true);
+          }
+        } else if (r && r.code == 1) {
+          __renewQrCodeStatus(true, '二维码已失效，点击刷新', '', true);
+        } else {
+          __renewQrCodeStatus(true, '出现异常，点击刷新', '', true);
+        }
+      }
+    });
+    __qrcodeCometTimeout = window.setTimeout(qrComet, 2000);
+  }
+
+  __qrcodeCometTimeout = window.setTimeout(qrComet, 2000);
+}
+
+var _qrcodeImage = {
+  qrcode : "\/cas\/themes\/mf\/images\/qrcode.svg",
+  normal : "\/cas\/themes\/mf\/images\/pc-login.svg"
+};
+
+function _changeMenu(index) {
+  this.currentMenu = index;
+  // TODO: refreshCaptchaInMenu(this.currentMenu);
+
+  currentMenu = this.currentMenu;
+}
+
+function _openOrCloseQrCode() {
+  this.isQrcode = !this.isQrcode;
+
+  __renewQrCodeStatus(false, '', '', true);
+
+  if (this.isQrcode) {
+    __refreshQrCode();
+  } else {
+    if (currentMenu == 3) {
+      this.currentMenu = 1;
+    } else {
+      this.currentMenu = currentMenu;
+    }
+  }
+
+  currentMenu = this.currentMenu;
+}
+
+</script>
+
+<!-- 密码登录、手机动态码登录 --><script type="text/javascript">
+function _passwordLogin() {
+  console.log("submit button click");
+  var username = $("#fm1").find("#username").val();
+  var password = $("#fm1").find("#password").val();
+  if (username == null || username == '') {
+    $("#showErrorMessageUsername").click();
+    return false;
+  }
+
+  if (password == null || password == '') {
+    $("#showErrorMessagePassword").click();
+    return false;
+  }
+
+  window.setTimeout(function () {
+    mfaDetect();
+  }, 500);
+
+  return false;
+}
+
+
+var i_sendToken = "\u53D1\u9001\u52A8\u6001\u7801"
+var i_sending = "\u53D1\u9001\u4E2D\u2026\u2026"
+var i_send = "\u5DF2\u53D1\u9001"
+
+function _smsCodeSend() {
+  var self = this;
+
+  var mobile = $("#fm2").find("#username").val();
+
+  if (mobile == null || mobile == '') {
+    self.disableSendToken = false;
+    $("#showErrorMessageMobile").click();
+    return;
+  }
+  if (!mobilePattern.test(mobile)) {
+    self.disableSendToken = false;
+    $("#showErrorMessageMobile").click();
+    return;
+  }
+
+  var time = 60;
+  var setSended = function() {
+    self.sendButtonText = (i_send + '('+time+')');
+    
+    time --;
+    if (time > 0) {
+      setTimeout(setSended, 1000);
+    } else {
+      self.disableSendToken = false;
+
+      self.sendButtonDisable = false;
+      self.sendButtonText = i_sendToken;
+    }
+  }
+
+  $.ajax({
+    url: "\/cas\/passwordlessTokenSend",
+    type: "POST",
+    data: {"username": mobile},
+  	dataType: "json",
+  	success: function(r) {
+  	  console.log(r);
+  	  
+  	  if (r.data.success) {
+    	  // 提示信息
+          $("#showSuccessMessageSendCode").click();
+    	  // 倒计时 60s
+    	  time = 60;
+    	  setSended();
+  	  }
+  	  
+  	  if (r.data.error) {
+  	    $("#showFailureMessageSendCode").click();
+  	    time = 0;
+  	    setSended();
+  	  }
+  	}
+  });
+}
+
+function _smsCodeLogin() {
+  var mobile = $("#fm2").find("#username").val();
+  var dynamiccode = $("#fm2").find("#password").val();
+  if (mobile == null || mobile == '') {
+    $("#showErrorMessageMobile").click();
+    return false;
+  }
+  if (!mobilePattern.test(mobile)) {
+    $("#showErrorMessageMobile").click();
+    return false;
+  }
+
+  if (dynamiccode == null || dynamiccode == '') {
+    $("#showErrorMessageDynamicCode").click();
+    return false;
+  }
+  
+  window.setTimeout(function () {
+    submitFm2();
+  }, 500);
+  
+  return false;
+}
+</script>
+
+<!-- 公告 --><script type="text/javascript">
+
+function _openNotice() {
+  vm.noticeDialogVisible = true;
+}
+
+</script>
+
+
+<!-- 图片验证码 --><script type="text/javascript">
+
+var __captchaImgUrl = "\/cas\/captcha.jpg";
+function __newCaptchaImgUrl() {
+  var captchaImgUrl = __captchaImgUrl+"?r=" +(new Date()).getTime()+ Math.floor(Math.random()*24);
+  return captchaImgUrl;
+}
+
+function __refreshCaptcha(loginType) {
+  if ("passwordLogin" == loginType) {
+    passwordLoginCom.captchaImgUrl = __newCaptchaImgUrl();
+  } else if ("smsCodeLogin" == loginType) {
+    smsCodeLoginCom.captchaImgUrl = __newCaptchaImgUrl();
+  }
+}
+
+</script>
+
+
+<!-- 记住密码，仅 移动浏览器 --><script type="text/javascript">
+function doRememberPassword(username, password) {
+  var containerFormInput = $("#fm1Input");
+  var rememberPasswordObj = containerFormInput.find('[name="rememberPassword"]');
+  if (rememberPasswordObj && rememberPasswordObj.length > 0) {
+    var rememberPassword = rememberPasswordObj.prop('checked');
+    if (rememberPassword) {
+      var savedUsername = username;
+      var savedPassword = password.indexOf('__RSA__') < 0 ? "__RSA__"+encrypt.encrypt(password) : password;
+      
+      localStorage.rememberPassword = true;
+      localStorage.savedUsername = savedUsername;
+      localStorage.savedPassword = savedPassword;
+    } else {
+      localStorage.rememberPassword = false;
+      localStorage.savedUsername = "";
+      localStorage.savedPassword = "";
+    }
+  }
+}
+
+function initRememberPassword() {
+  var containerFormInput = $("#fm1Input");
+  var rememberPasswordObj = containerFormInput.find('[name="rememberPassword"]');
+  if (rememberPasswordObj && rememberPasswordObj.length > 0) {
+    var rememberPassword = localStorage.rememberPassword == "true";
+    if (rememberPassword) {
+      var savedUsername = localStorage.savedUsername || "";
+      var savedPassword = localStorage.savedPassword || "";
+
+      containerFormInput.find('[name="username"]').val(savedUsername);
+      containerFormInput.find('[name="password"]').val(savedPassword);
+      
+      containerFormInput.find('[name="username"]').focus(function() {this.select();});
+      containerFormInput.find('[name="password"]').focus(function() {this.select();});
+      
+      containerFormInput.find('[name="username"]').keyup(function() {
+        var thisUsername = containerFormInput.find('[name="username"]').val();
+        if (thisUsername == savedUsername) {
+          containerFormInput.find('[name="password"]').val(savedPassword);
+        } else {
+          containerFormInput.find('[name="password"]').val("");
+        }
+      });
+    }
+  }
+}
+</script>
+
+<!-- 登录失败，处理失败 --><!-- 图片验证码 --><script type="text/javascript">
+// 登录失败，处理失败
+function processLoginError(containerFormInput, containerForm, originalUsername, hasErrors, errors, loginType) {
+  console.log(containerForm);
+  console.log(originalUsername);
+  console.log(hasErrors);
+  console.log(errors);
+  
+  doLoginFailN(containerFormInput, containerForm, originalUsername, hasErrors, errors, loginType);
+}
+
+var casServerCaptchaEnabled = true;
+var casServerCaptchaSkipN = true;
+var captchaSkipN = "1";
+
+var casServerCaptchaShow = false;
+
+// 提交登录时，记录登录次数、登录时间
+function doLogin() {
+  var loginN = (localStorage.loginN || "0");
+  if (loginN == null) {
+    loginN = "0";
+  }
+  
+  loginN = parseInt(loginN) +1;
+  localStorage.loginN = loginN;
+
+  var nowTimestamp = new Date().getTime();
+  localStorage.loginNTimestamp = nowTimestamp;
+}
+
+//登录失败时，记录失败次数、失败时间，并显示 图片验证码
+function doLoginFailN(containerFormInput, containerForm, originalUsername, hasErrors, errors, loginType) {
+
+  var failN = (localStorage.failN || "0");
+  if (failN == null) {
+    failN = "0";
+  }
+
+  if (hasErrors) {
+    failN = parseInt(failN) +1;
+    localStorage.failN = failN;
+    
+    var nowTimestamp = new Date().getTime();
+    localStorage.failNTimestamp = nowTimestamp;
+  }
+  
+  doErrorShow(containerForm, hasErrors, errors, loginType);
+  doCaptchaShow(containerFormInput, containerForm, failN, loginType);
+}
+
+function doErrorShow(containerForm, hasErrors, errors, loginType) {
+  if (!hasErrors) {
+    return;
+  }
+
+  // 显示错误信息
+  var error = errors[0];
+
+  if ("passwordLogin" == loginType) {
+    if (passwordLoginCom) {
+      passwordLoginCom.loginError = error;
+    }
+  } else if ("smsCodeLogin" == loginType) {
+    if (smsCodeLoginCom) {
+      smsCodeLoginCom.loginError = error;
+    }
+  }
+
+}
+
+// 显示 图片验证码
+function doCaptchaShow(containerFormInput, containerForm, failN, loginType) {
+  console.log('show captcha, failN='+failN+", captchaSkipN="+captchaSkipN);
+
+  var fialNInput = containerForm.find('[name="failN"]');
+  fialNInput.val(failN);
+
+  /* var captchaInput = containerFormInput.find('[name="captcha"]');  // console.log(captchaInput.parents("div.el-form-item"));
+  if (captchaInput.length <= 0) {
+    return;
+  }
+  
+  captchaInput.parents("div.captcha-input-container").hide();
+
+  if (failN < 0) {
+    captchaInput.parents("div.captcha-input-container").show();
+  } else if (failN >= captchaSkipN) {
+    captchaInput.parents("div.captcha-input-container").show();
+  } */
+
+  var isCaptchaShow = false;
+  if (failN < 0) {
+    isCaptchaShow = true;
+  } else if (failN >= captchaSkipN) {
+    isCaptchaShow = true;
+  }
+  
+  if ("passwordLogin" == loginType) {
+    if (passwordLoginCom) {
+      passwordLoginCom.isCaptchaShow = isCaptchaShow;
+    }
+  } else if ("smsCodeLogin" == loginType) {
+    if (smsCodeLoginCom) {
+      smsCodeLoginCom.isCaptchaShow = isCaptchaShow;
+    }
+  }
+  
+  var captchaInput = containerFormInput.find('[name="captcha"]');
+  if (captchaInput.length <= 0) {
+    return;
+  }
+  
+  captchaInput.parents("div.captcha-input-container").hide();
+  casServerCaptchaShow = false;
+  if (isCaptchaShow) {
+    captchaInput.parents("div.captcha-input-container").show();
+    casServerCaptchaShow = true;
+  }
+}
+
+// 判断是否显示 图片验证码
+function initCaptchaShow(containerFormInput, containerForm, loginType) {
+  if (casServerCaptchaEnabled) {
+    if (casServerCaptchaSkipN) {
+      var loginN = (localStorage.loginN || "0");
+      if (loginN == null) {
+        loginN = "0";
+      }
+      loginN = parseInt(loginN);
+      
+      var failN = (localStorage.failN || "0");
+      if (failN == null) {
+        failN = "0";
+      }
+      failN = parseInt(failN);
+      
+      var failNTimestamp = (localStorage.failNTimestamp || "0");
+      if (failNTimestamp == null) {
+        failNTimestamp = "0";
+      }
+      
+      var nowTimestamp = new Date().getTime();
+      console.log('init captcha, failNTimestamp='+failNTimestamp+", nowTimestamp="+nowTimestamp);
+      if (failNTimestamp < (nowTimestamp - (1000 * 60 * 60 * 1))) { // FIXME: 如果 1小时后，再登录，则清空 failN
+        loginN = 0; 
+        localStorage.loginN = loginN;
+        failN = 0;
+        localStorage.failN = failN;
+      }
+      
+      if (failN < loginN) {
+        loginN = 0; 
+        localStorage.loginN = loginN;
+        failN = 0; 
+        localStorage.failN = failN;
+      }
+      
+      doCaptchaShow(containerFormInput, containerForm, failN, loginType); // 显示
+    } else {
+      doCaptchaShow(containerFormInput, containerForm, -1, loginType); // 始终显示
+    }
+  }
+}
+</script>
+
+
+<!-- PC登录页面 加载 --><script>
+
+loadComponent = function() {
+
+  console.log(window["casServerSiteUi"]);
+
+  window["casServerSiteUi"].get('./Layout').then(function layout(factory){
+    
+    // 先加载 layout
+    var module = factory()
+    var newDemo = Vue.component('Layout',module.default)
+    layoutCom = new newDemo({
+      el:"#layout",
+      propsData: {
+        i18n: _i18n,
+        config: _config,
+
+        qrcodeImage: _qrcodeImage,
+
+        isQrcode: isQrcode,
+        currentMenu: currentMenu,
+      },
+      
+      methods: {
+        changeMenu: function changeMenu(index) {
+          _changeMenu.call(this, index);
+        },
+        // 扫码登录
+        openOrCloseQrCode: function openOrCloseQrCode() {
+          _openOrCloseQrCode.call(this);
+        },
+      }
+    })
+
+    // 再依次加载 其他组件
+    window["casServerSiteUi"].get('./Background').then(function background(factory){
+      var module = factory()
+      var newDemo = Vue.component('Background', module.default)
+      backgroudCom = new newDemo({
+        el:"#background",
+        propsData: {
+          i18n: _i18n,
+          config: _config,
+          bg: _backgrounds,
+        }
+      })
+    })
+
+    window["casServerSiteUi"].get('./Logo').then(function logo(factory){
+      var module = factory()
+      var newDemo = Vue.component('Logo',module.default)
+      logoCom = new newDemo({
+        el:"#logo",
+        propsData: {
+          i18n: _i18n,
+          config: _config,
+          logo: _logo,
+        }
+      })
+    })
+
+    if (localeEnabled == "true") {
+    window["casServerSiteUi"].get('./Language').then(function language(factory){
+      var module = factory()
+      var newDemo = Vue.component('Language',module.default)
+      languageCom = new newDemo({
+        el:"#language",
+        propsData: {
+          i18n: _i18n,
+          config: _config,
+          language: _language,
+        },
+        methods:{
+          changeLanage: function changeLanage() {
+            var lang = this.language == 'zh' ? 'en' : 'zh';
+            
+            var url = window.location.href;
+            if (url.indexOf('&locale=') > 0) {
+              url = url.substring(0, url.indexOf('&locale='));
+            }
+            if (url.indexOf('?')<0) {
+              url = url + '?_x=0';
+            }
+            url = url + '&locale=' + lang;
+            
+            this.language = lang;
+            console.log(this.language);
+
+            window.location.href = url;
+          }
+        }
+      })
+    })
+    }
+
+    //  公告栏
+    window["casServerSiteUi"].get('./NoticeBoard').then(function noticeBoard(factory){
+      var module = factory()
+      var newDemo = Vue.component('NoticeBoard',module.default)
+      noticeBoardCom = new newDemo({
+        el:"#noticeBoard", 
+        propsData: {
+          config: _config,
+          i18n: _i18n,
+          dialogVisible: dialogVisible,
+        }
+      })
+    })
+
+    window["casServerSiteUi"].get('./Announcement').then(function announcement(factory){
+      var module = factory()
+      var newDemo = Vue.component('Announcement',module.default)
+      announcementCom = new newDemo({
+        el:"#announcement", 
+        propsData: {
+          i18n: _i18n,
+          config: _config,
+        }
+      })
+    })
+    
+    window["casServerSiteUi"].get('./Notice').then(function notice(factory){
+      var module = factory()
+      var newDemo = Vue.component('Notice',module.default)
+      noticeCom = new newDemo({
+        el:"#notice", 
+        propsData: {
+          i18n: _i18n,
+          config: _config,
+        }
+      })
+    })
+    
+    window["casServerSiteUi"].get('./CustomLink').then(function customLink(factory){
+      var module = factory()
+      var newDemo = Vue.component('CustomLink',module.default)
+      customLinkCom = new newDemo({
+        el:"#customLink",
+        propsData: {
+          i18n: _i18n,
+          config: _config,
+        }
+      })
+    })
+
+    window["casServerSiteUi"].get('./Copyright').then(function copyright(factory){
+      var module = factory()
+      var newDemo = Vue.component('Copyright',module.default)
+      copyrightCom = new newDemo({
+        el:"#copyright",
+        propsData: {
+          i18n: _i18n,
+          config: _config,
+        }
+      })
+    })
+
+    window["casServerSiteUi"].get('./BrowserSupport').then(function browserSupport(factory){
+      var module = factory()
+      var newDemo = Vue.component('BrowserSupport',module.default)
+      browserSupportCom = new newDemo({
+        el:"#browserSupport",
+        propsData: {
+          i18n: _i18n,
+          config: _config,
+        }
+      })
+    })
+
+    window["casServerSiteUi"].get('./PasswordLogin').then(function passwordLogin(factory){
+      var module = factory()
+      var newDemo = Vue.component('PasswordLogin',module.default)
+      passwordLoginCom = new newDemo({
+        el:"#passwordLogin",
+        propsData: {
+          i18n: _i18n,
+          config: _config,
+          captchaEnabled: casServerCaptchaEnabled,
+          captchaImgUrl: __newCaptchaImgUrl(),
+          
+          isCaptchaShow: false,
+        },
+        /* mounted() {
+          initCaptchaShow($("#fm1Input"), $("#fm1"), "passwordLogin");
+        }, */
+        methods: {
+          refreshCaptcha: function refreshCaptcha() {
+            __refreshCaptcha('passwordLogin');
+          },
+          passwordLogin: function passwordLogin(username, password, captcha, rememberMe) {
+            var self = this;
+            
+            vm.passwordLoginUsername = username;
+            vm.passwordLoginPassword = password;
+            vm.passwordLoginCaptcha = captcha;
+            vm.passwordLoginRememberMe = rememberMe;
+
+            window.setTimeout(function () {
+              _passwordLogin.call(self);
+            }, 500);
+            
+            return false;
+          }
+        }
+      })
+      
+      initCaptchaShow($("#fm1Input"), $("#fm1"), "passwordLogin");
+
+      if (loginError && loginError.loginType == "passwordLogin") {
+        console.log("trigger processLoginError", loginError.loginType);
+        processLoginError(loginError.containerFormInput, loginError.containerForm, loginError.originalUsername, loginError.hasErrors, loginError.errors, loginError.loginType);
+      }
+
+    })
+
+    window["casServerSiteUi"].get('./SmsCodeLogin').then(function smsCodeLogin(factory){
+      var module = factory()
+      var newDemo = Vue.component('SmsCodeLogin',module.default)
+      smsCodeLoginCom = new newDemo({
+        el:"#smsCodeLogin",
+        data: function data() {
+          return {
+            disableSendToken: false,
+          }
+        },
+        propsData: {
+          i18n: _i18n,
+          config: _config,
+          sendButtonDisable: false,
+          sendButtonText: i_sendToken,
+        },
+        methods: {
+          smsCodeSend: function smsCodeSend(mobile) {
+            var self = this;
+
+            vm.smsCodeLoginUsername = mobile;
+
+            if (this.disableSendToken) {
+              return;
+            }
+            this.disableSendToken = true;
+
+            window.setTimeout(function () {
+              _smsCodeSend.call(self);
+            }, 500);
+          },
+          smsCodeLogin: function smsCodeLogin(mobile, dynamiccode) {
+            var self = this;
+
+            vm.smsCodeLoginUsername = mobile;
+            vm.smsCodeLoginPassword = dynamiccode;
+
+            window.setTimeout(function () {
+              _smsCodeLogin.call(self);
+            }, 500);
+            
+            return false;
+          },
+        }
+      })
+      
+      if (loginError && loginError.loginType == "smsCodeLogin") {
+        console.log("trigger processLoginError", loginError.loginType);
+        processLoginError(loginError.containerFormInput, loginError.containerForm, loginError.originalUsername, loginError.hasErrors, loginError.errors, loginError.loginType);
+      }
+    })
+
+    window["casServerSiteUi"].get('./ScanLogin').then(function scanLogin(factory){
+      var module = factory()
+      var newDemo = Vue.component('ScanLogin',module.default)
+      scanLoginCom = new newDemo({
+        el:"#scanLogin",
+        propsData: {
+          i18n: _i18n,
+          config: _config,
+          qrcodeImgUrl: __newQrCodeImgUrl(),
+
+          isQrcodeAlert: false,
+          qrcodeAlertMessage: "",
+        },
+        methods: {
+          refreshQrCode: function refreshQrCode() {
+            __refreshQrCode();
+          }
+        }
+      })
+      
+      if (isQrcode) {
+        __refreshQrCode();
+      }
+    })
+
+    window["casServerSiteUi"].get('./FederatedLogin').then(function federatedLogin(factory){
+      var module = factory()
+      var newDemo = Vue.component('FederatedLogin',module.default)
+      federatedLoginCom = new newDemo({
+        el:"#federatedLogin",
+        propsData: {
+          i18n: _i18n,
+          config: _config,
+          
+          federatedUrls: _federatedUrls,
+        }
+      })
+    })
+
+    window["casServerSiteUi"].get('./QuickLink').then(function quickLink(factory){
+      var module = factory()
+      var newDemo = Vue.component('QuickLink',module.default)
+      quickLinkCom = new newDemo({
+        el:"#quickLink",
+        propsData: {
+          i18n: _i18n,
+          config: _config,
+          superappDownloadQrCodeImgUrl: _superappDownloadQrCodeImgUrl,
+          forgotPasswordRedirectUrl: __newForgotYourPassword(),
+          activeAccountRedirectUrl: __newActiveYourAccount(),
+        },
+      })
+    })
+
+  })
+
+};
+</script>
+
+
+<script type="text/javascript">
+var SwUI = SWUI;
+Vue.use(SwUI)
+
+var vm = new Vue({
+  el: '#vue_main',
+  data: function data() {
+    return {
+      isMobile: isMobile,
+
+      customEntryLinks: customEntryLinks,
+      showLink: showLink,
+      showLessLink: showLessLink,
+
+      dialogVisible: dialogVisible,
+      
+      noticeDialogVisible: false,
+      
+      passwordLoginUsername: "",
+      passwordLoginPassword: "",
+      passwordLoginCaptcha: "",
+      passwordLoginRememberMe: false,
+      
+      smsCodeLoginUsername: "",
+      smsCodeLoginPassword: "",
+      
+      qrCodeStateKey: "",
+      
+      
+      active:0,
+
+      logoM: logoM, 
+      bgM: bgM, 
+      
+      jointActive: -1,
+      loading: false,
+
+      rememberPassword: localStorage.rememberPassword=="true",
+
+      // 城市热点
+      drcomIPLoginEnabled: drcomIPLoginEnabled,
+      drcomIPDialogVisible: drcomIPSuccess,
+      isDrcomIPLoginAuto: isDrcomIPLoginAuto,
+      drcomIPLoginAutoEnabled: isDrcomIPLoginAuto,
+      drcomIPLoginAutoTimeout: 0,
+      drcomIPLoginButtonText: "上网账号快速登录",
+      
+      // 双因子认证
+      mfaEnabled: mfaEnabled,
+      guardDialogVisible: false,
+
+      typeList:['使用App推送认证','使用安全手机认证','使用安全邮箱认证','使用客户端扫码','使用人脸识别认证'],
+      iconIndex:0,  //安全验证方式   0：app 推送；1：安全手机； 2：安全邮箱  3：人脸识别
+      safeIcon2:[
+                 "\/cas\/themes\/mf\/images\/safe\/app2.png",
+                 "\/cas\/themes\/mf\/images\/safe\/phone2.png",
+                 "\/cas\/themes\/mf\/images\/safe\/email2.png",
+                 "\/cas\/themes\/mf\/images\/safe\/qrcode2.png",
+                 "\/cas\/themes\/mf\/images\/safe\/face2.png"
+                ],
+      safeIcon:[
+                "\/cas\/themes\/mf\/images\/safe\/app.png",
+                "\/cas\/themes\/mf\/images\/safe\/phone.png",
+                "\/cas\/themes\/mf\/images\/safe\/email.png",
+                "\/cas\/themes\/mf\/images\/safe\/qrcode.png",
+                "\/cas\/themes\/mf\/images\/safe\/face.png"
+               ],
+
+      showError:false,  //是否显示验证码错误
+      typeInfo: [
+                 {'type':'apppush', 'enabled': mfaTypeAppPush, 'title':'APP推送', 'info':'使用APP推送验证', 'icon':"\/cas\/themes\/mf\/images\/safe\/app.png", 'icon2':"\/cas\/themes\/mf\/images\/safe\/app2.png"},
+                 {'type':'securephone', 'enabled': mfaTypeSecurePhone, 'title':'安全手机', 'info':'使用安全手机验证', 'icon':"\/cas\/themes\/mf\/images\/safe\/phone.png", 'icon2':"\/cas\/themes\/mf\/images\/safe\/phone2.png"},
+                 {'type':'secureemail', 'enabled': mfaTypeSecureEmail, 'title':'安全邮箱', 'info':'使用安全邮箱验证', 'icon':"\/cas\/themes\/mf\/images\/safe\/email.png", 'icon2':"\/cas\/themes\/mf\/images\/safe\/email2.png"},
+                 {'type':'qrcode', 'enabled': mfaTypeQrCode, 'title':'客户端扫码', 'info':'使用客户端扫码', 'icon':"\/cas\/themes\/mf\/images\/safe\/qrcode.png", 'icon2':"\/cas\/themes\/mf\/images\/safe\/qrcode2.png"},
+                 {'type':'faceverify', 'enabled': mfaTypeFaceVerify, 'title':'人脸识别', 'info':'使用人脸识别验证', 'icon':"\/cas\/themes\/mf\/images\/safe\/face.png", 'icon2':"\/cas\/themes\/mf\/images\/safe\/face2.png"},
+                 ],
+      typeIndex: defaultTypeIndex,  //安全验证方式   0：app 推送；1：安全手机； 2：安全邮箱  3：客户端扫码  4：人脸识别
+      faceType:1,  // 人脸识别认证状态  1  扫描二维码  2 刷新二维码  3 扫描成功
+      
+      
+      attestServerUrl: null,
+      gid: null,
+      
+      appPushSendTimeout: 0,
+      appPushSendDisabled: false,
+      appPushSendText: "点击发送验证请求",
+      appPushSendSeconds: 30,
+      appPushStatusTimeout: 0,
+      appPushStatusShowAlert: false,
+      appPushStatusAlertMessage: null,
+      appPushCallbackCode: null,
+
+      securePhone:'',
+      securePhoneSendTimeout: 0,
+      securePhoneSendDisabled: false,
+      securePhoneSendText: "获取验证码",
+      securePhoneSendSeconds: 60,
+      securePhoneCode:'',
+      securePhoneValidShowAlert: false,
+      securePhoneValidAlertMessage: null,
+
+      secureEmail:'',
+      secureEmailSendTimeout: 0,
+      secureEmailSendDisabled: false,
+      secureEmailSendText: "获取验证码",
+      secureEmailSendSeconds: 60,
+      secureEmailCode:'',
+      secureEmailValidShowAlert: false,
+      secureEmailValidAlertMessage: null,
+      
+      qrCode:null,
+      qrCodeScanTypeNames: "",
+      qrCodeScanQrcode: null,
+      qrCodeScanSuccess: false,
+      qrCodeStatusTimeout: 0,
+      qrCodeStatusShowAlert: false,
+      qrCodeStatusAlertMessage: null,
+      qrCodeCallbackCode: null,
+      
+
+      faceVerify:null,
+      faceVerifyScanFaceverify: null,
+      faceVerifyScanSuccess: false,
+      faceVerifyStatusTimeout: 0,
+      faceVerifyStatusShowAlert: false,
+      faceVerifyStatusAlertMessage: null,
+      faceVerifyCallbackCode: null,
+      
+    };
+  },
+  mounted: function mounted() {
+    if (!isMobile) {
+      if (loadComponent) {
+        loadComponent();
+      }
+      
+      if (this.isQrcode) {
+        // 显示二维码
+        var self = this;
+        self.isQrcodeAlert = false;
+        self.qrcodeAlertMessage = "";
+        self.stateKey = "";
+        this.qrcodeImgUrl = "\/cas\/qr\/qrcode"+"?r=" +(new Date()).getTime()+ Math.floor(Math.random()*24) + (isDebug?"&debug=debug":"");
+        this.startQrComet();
+      }
+      
+      // 城市热点
+      if (this.isDrcomIPLoginAuto) {
+        var drcomIPCloseButton = $("#drcomIPClose");
+        var drcomIPLoginButton = $("#drcomIPLogin");
+        
+        drcomIPCloseButton.css("display", "none")
+        drcomIPLoginButton.css("display", "inline")
+        
+        this.drcomIPLoginAutoSubmit();
+      } else {
+        var drcomIPCloseButton = $("#drcomIPClose");
+        var drcomIPLoginButton = $("#drcomIPLogin");
+        
+        drcomIPCloseButton.css("display", "inline-block")
+        drcomIPLoginButton.css("display", "inline-block")
+      }
+      
+    }
+  },
+  methods: {
+    // 城市热点
+    drcomIPLogin: function drcomIPLogin() {
+      if (this.isDrcomIPLoginAuto) {
+        this.drcomIPLoginAutoCancel();
+      } else {
+        if (this.drcomIPLoginAutoEnabled) {
+          localStorage.isDrcomIPLoginAuto = "true";
+        } else {
+          localStorage.isDrcomIPLoginAuto = "false";
+        }
+        submitFm9();
+      }
+    },
+    drcomIPLoginAutoSubmit: function drcomIPLoginAutoSubmit() {
+      var self = this;
+      var isDrcomIPLoginAuto = localStorage.isDrcomIPLoginAuto || "false";
+      if (isDrcomIPLoginAuto == "true") {
+        var drcomIPLoginButton = $("#drcomIPLogin");
+        
+        var time = 5;
+        var autoSubmit = function() {
+          drcomIPLoginButton.find('span').text(self.drcomIPLoginButtonText + '('+time+' 秒后自动登录，点击可取消)');
+          
+          time --;
+          if (time >= 0) {
+            self.drcomIPLoginAutoTimeout = window.setTimeout(autoSubmit, 1000);
+          } else {
+            submitFm9();
+          }
+        }
+        
+        self.drcomIPLoginAutoTimeout = window.setTimeout(autoSubmit, 1);
+      }
+    },
+    drcomIPLoginAutoCancel: function drcomIPLoginAutoCancel() {
+      var self = this;
+      
+      window.clearTimeout(self.drcomIPLoginAutoTimeout);
+      self.isDrcomIPLoginAuto = false;
+      self.drcomIPLoginAutoEnabled = false;
+      
+      var drcomIPLoginButton = $("#drcomIPLogin");
+      drcomIPLoginButton.find('span').text(self.drcomIPLoginButtonText);
+      
+      var drcomIPCloseButton = $("#drcomIPClose");
+      var drcomIPLoginButton = $("#drcomIPLogin");
+      
+      drcomIPCloseButton.css("display", "inline-block")
+      drcomIPLoginButton.css("display", "inline-block")
+      
+      localStorage.isDrcomIPLoginAuto = "false";
+    },
+    
+    /* closeNotice: function closeNotice() {
+      this.noticeDialogVisible = false;
+    }, */
+
+    /* handleClose: function handleClose() {
+      this.dialogVisible = false;
+    }, */
+
+    showErrorMessageUsername: function showErrorMessageUsername() {
+      // var message = "\u8BF7\u8F93\u5165\u7528\u6237\u540D" + "\u8BF7\u8F93\u5165\u5B66\u5DE5\u53F7-\u8D26\u53F7\/";
+      var message = "\u8BF7\u8F93\u5165\u5B66\u5DE5\u53F7-\u8D26\u53F7\/";
+      this.$message.error(message);
+    },
+    showErrorMessagePassword: function showErrorMessagePassword() {
+      // var message = "\u8BF7\u8F93\u5165\u767B\u5F55\u5BC6\u7801";
+      var message = "\u8BF7\u8F93\u5165\u767B\u5F55\u5BC6\u7801";
+      this.$message.error(message);
+    },
+    showErrorMessageCaptcha: function showErrorMessageCaptcha() {
+      var message = "\u8BF7\u8F93\u5165\u56FE\u7247\u9A8C\u8BC1\u7801";
+      this.$message.error(message);
+    },
+    showErrorMessageMobile: function showErrorMessageMobile() {
+      var message = "\u8BF7\u8F93\u5165\u624B\u673A\u53F7";
+      this.$message.error(message);
+    },
+    showErrorMessageDynamicCode: function showErrorMessageDynamicCode() {
+      var message = "\u8BF7\u8F93\u5165\u52A8\u6001\u5BC6\u7801";
+      this.$message.error(message);
+    },
+    showSuccessMessageSendCode: function showSuccessMessageSendCode() {
+      var message = "\u5DF2\u53D1\u9001";
+      this.$message.info(message);
+    },
+    showFailureMessageSendCode: function showFailureMessageSendCode() {
+      var message = "\u53D1\u9001\u5931\u8D25";
+      this.$message.error(message);
+    },
+
+
+    // 双因子
+    showGuardDialog: function showGuardDialog() {
+      var self = this;
+      this.clearAppPushStatus();
+      this.clearSecurePhone();
+      this.clearSecureEmail();
+      this.clearQrCode();
+      
+      this.typeIndex = defaultTypeIndex;
+      this.guardDialogVisible = true;
+      
+      this.changeGuard(defaultTypeIndex);
+    },
+    hideGuardDialog: function hideGuardDialog() {
+      var self = this;
+      this.clearAppPushStatus();
+      this.clearSecurePhone();
+      this.clearSecureEmail();
+      this.clearQrCode();
+
+      this.typeIndex = defaultTypeIndex;
+      this.guardDialogVisible = false;
+      
+      $("#fm1").find('[name="mfaState"]').val('');
+    },
+    
+    changeGuard: function changeGuard(index) {
+      var self = this;
+      this.clearAppPushStatus();
+      this.clearSecurePhone();
+      this.clearSecureEmail();
+      this.clearQrCode();
+      this.clearFaceVerify();
+
+      this.typeIndex = index;
+      
+      this.initGuard();
+    },
+
+    initGuard: function initGuard() {
+      var self = this;
+      
+      var type = this.typeInfo[this.typeIndex].type;
+      var state = $("#fm1").find('[name="mfaState"]').val();
+      
+      var url = "\/cas\/mfa\/initByType"+"/"+type;
+      url += "?state=" + state;
+      $.ajax({
+        type: "GET",
+        url: url,
+        dataType: "json",
+        success: function success(r) {
+          console.log(url, r);
+          if (r && r.code == 0) {
+            self.attestServerUrl = r.data.attestServerUrl;
+            self.gid = r.data.gid;
+
+            if (type == "apppush") {
+              
+            } else if (type == "securephone") {
+              self.securePhone = r.data.securePhone;
+            } else if (type == "secureemail") {
+              self.secureEmail = r.data.secureEmail;
+            } else if (type == "qrcode") {
+              self.qrCode = r.data.qrCode;
+              self.qrCodeInit();
+            } else if (type == "faceverify") {
+              self.faceVerifyInit();
+            }
+          } else {
+            self.attestServerUrl = null;
+            self.gid = null;
+
+            self.securePhone = null;
+            self.secureEmail = null;
+            
+            self.qrCode = null;
+          }
+        },
+        error: function error(err) {
+          self.attestServerUrl = null;
+          self.gid = null;
+
+          self.securePhone = null;
+          self.secureEmail = null;
+          
+          self.qrCode = null
+        }
+      });
+    },
+
+    appPushSend: function appPushSend() {
+      var self = this;
+
+      function appPushSendCountDown() {
+        self.appPushSendSeconds --;
+        
+        self.appPushSendDisabled = true;
+        self.appPushSendText = "点击发送验证请求" + "("+self.appPushSendSeconds+")";
+        
+        self.appPushSendTimeout = window.setTimeout(appPushSendCountDown, 1000);
+        
+        if (self.appPushSendSeconds <= 0) {
+          window.clearTimeout(self.appPushSendTimeout);
+          
+          self.appPushSendDisabled = false;
+          self.appPushSendText = "点击发送验证请求";
+          self.appPushSendSeconds = 30;
+        }
+      }
+
+      self.appPushSendDisabled = true;
+
+      var url = self.attestServerUrl + '/api/guard/apppush/send';
+      var postdata = { "gid": self.gid };
+      
+      $.ajax({
+        type: "POST",
+        url: url,
+        contentType: 'application/json; charset=UTF-8',
+        data: JSON.stringify(postdata),
+        dataType: "json",
+        success: function success(r) {
+          console.log(url, r);
+
+          self.appPushSendDisabled = false;
+
+          if (r && r.code == 0 && r.data.callbackCode) {
+            self.appPushStatusShowAlert = false;
+            self.appPushStatusAlertMessage = "";
+
+            self.appPushCallbackCode = r.data.callbackCode;
+
+            self.startAppPushStatus();
+            
+            appPushSendCountDown();
+          } else {
+            
+            self.startAppPushStatus();
+          }
+        },
+        error: function error(err) {
+          console.log(err);
+
+          self.appPushSendDisabled = false;
+        }
+      });
+    },
+    startAppPushStatus: function startAppPushStatus() {
+      var self = this;
+
+      window.clearTimeout(self.appPushStatusTimeout); // 定时
+      
+      /*
+       * status 
+       * 0 init 新建、初始化, 
+       * 1 sent 已发送、已扫码等, 
+       * 2 valid 验证通过, 
+       * 3 fail 验证失败, 
+       * 5 cancel 取消, 
+       * 9 expired 已过期、不存在
+       */
+      function appPushStatus() {
+        var url = self.attestServerUrl + '/api/guard/apppush/status';
+        var postdata = { "gid": self.gid };
+        
+        $.ajax({
+          type: "POST",
+          url: url,
+          contentType: 'application/json; charset=UTF-8',
+          data: JSON.stringify(postdata),
+          dataType: "json",
+          timeout: 1000,
+          success: function success(r) {
+            // console.log(url, r);
+            if (r && r.code == 0) {
+              var status = r.data.status;
+              
+              if (status == 0) {
+                
+                self.appPushStatusShowAlert = false;
+                self.appPushStatusAlertMessage = "";
+              } else if (status == 1) {
+                
+                self.appPushStatusShowAlert = true;
+                self.appPushStatusAlertMessage = "等待确认";
+              } else if (status == 2) {
+                
+                self.appPushStatusShowAlert = true;
+                self.appPushStatusAlertMessage = "已确认";
+
+                window.clearTimeout(self.appPushStatusTimeout);
+                window.setTimeout(function () {
+                  submitFm1();
+                }, 500);
+              } else if (status == 3) {
+                
+                self.appPushStatusShowAlert = true;
+                self.appPushStatusAlertMessage = "确认失败";
+                
+                window.clearTimeout(self.appPushStatusTimeout);
+              } else if (status == 5) {
+                
+                self.appPushStatusShowAlert = true;
+                self.appPushStatusAlertMessage = "已取消";
+                
+                window.clearTimeout(self.appPushStatusTimeout);
+              } else if (status == 9) {
+                
+                self.appPushStatusShowAlert = true;
+                self.appPushStatusAlertMessage = "已失效，请重新发送";
+                
+                self.appPushCallbackCode = null;
+                
+                window.clearTimeout(self.appPushStatusTimeout);
+                
+                window.setTimeout(function () {
+                  self.initGuard();
+                }, 500);
+                
+              }
+              
+            } else {
+              window.clearTimeout(self.appPushStatusTimeout);
+            }
+          },
+          error: function error(err) {
+            console.log(err);
+            window.clearTimeout(self.appPushStatusTimeout);
+          }
+        });
+        
+        self.appPushStatusTimeout = window.setTimeout(appPushStatus, 2000);
+      }
+      
+      self.appPushStatusTimeout = window.setTimeout(appPushStatus, 100);
+    },
+    
+    clearAppPushStatus: function clearAppPushStatus() {
+      var self = this;
+
+      window.clearTimeout(self.appPushSendTimeout);
+      
+      self.appPushSendDisabled = false;
+      self.appPushSendText = "点击发送验证请求";
+      self.appPushSendSeconds = 30;
+
+      window.clearTimeout(self.appPushStatusTimeout);
+      self.appPushStatusShowAlert = false;
+      self.appPushStatusAlertMessage = "";
+      
+      self.appPushCallbackCode = null;
+    },
+    
+
+    securePhoneSend: function securePhoneSend() {
+      var self = this;
+      
+      function securePhoneSendCountDown() {
+        self.securePhoneSendSeconds --;
+        
+        self.securePhoneSendDisabled = true;
+        self.securePhoneSendText = "获取验证码" + "("+self.securePhoneSendSeconds+")";
+        
+        self.securePhoneSendTimeout = window.setTimeout(securePhoneSendCountDown, 1000);
+        
+        if (self.securePhoneSendSeconds <= 0) {
+          window.clearTimeout(self.securePhoneSendTimeout);
+          
+          self.securePhoneSendDisabled = false;
+          self.securePhoneSendText = "获取验证码";
+          self.securePhoneSendSeconds = 60;
+        }
+      }
+
+      self.securePhoneSendDisabled = true;
+
+      var url = self.attestServerUrl + '/api/guard/securephone/send';
+      var postdata = { "gid": self.gid };
+      
+      $.ajax({
+        type: "POST",
+        url: url,
+        contentType: 'application/json; charset=UTF-8',
+        data: JSON.stringify(postdata),
+        dataType: "json",
+        success: function success(r) {
+          console.log(url, r);
+
+          self.securePhoneSendDisabled = false;
+
+          if (r && r.code == 0) {
+            self.securePhoneValidShowAlert = true;
+            self.securePhoneValidAlertMessage = "已发送";
+            
+            securePhoneSendCountDown();
+          } else if (r && r.code != 0 && r.data.result == 'expired') {
+            self.securePhoneValidShowAlert = true;
+            self.securePhoneValidAlertMessage = "发送失败，已过期，请重新获取验证码";
+            
+            window.setTimeout(function () {
+              self.initGuard();
+            }, 500);
+          } else {
+            self.securePhoneValidShowAlert = true;
+            self.securePhoneValidAlertMessage = "发送失败";
+          }
+        },
+        error: function error(err) {
+          console.log(err);
+
+          self.securePhoneSendDisabled = false;
+
+          self.securePhoneValidShowAlert = true;
+          self.securePhoneValidAlertMessage = "发送失败";
+        }
+      });
+    },
+    securePhoneValid: function securePhoneValid() {
+      var self = this;
+      
+      var url = self.attestServerUrl + '/api/guard/securephone/valid';
+      var postdata = { "gid": self.gid, "code": self.securePhoneCode };
+      
+      $.ajax({
+        type: "POST",
+        url: url,
+        contentType: 'application/json; charset=UTF-8',
+        data: JSON.stringify(postdata),
+        dataType: "json",
+        success: function success(r) {
+          console.log(url, r);
+          
+          if (r && r.code == 0) {
+            var status = r.data.status;
+            
+            if (status == 2) {
+              // self.clearSecurePhone();
+
+              window.setTimeout(function () {
+                submitFm1();
+              }, 500);
+            } else {
+              self.securePhoneValidShowAlert = true;
+              self.securePhoneValidAlertMessage = "验证失败";
+            }
+          }
+
+        },
+        error: function error(err) {
+          console.log(err);
+        }
+      });
+    },
+
+    clearSecurePhone: function clearSecurePhone() {
+      var self = this;
+      
+      window.clearTimeout(self.securePhoneSendTimeout);
+      
+      self.securePhoneSendDisabled = false;
+      self.securePhoneSendText = "获取验证码";
+      self.securePhoneSendSeconds = 60;
+
+      self.securePhoneCode = '';
+      self.securePhoneValidShowAlert = false;
+      self.securePhoneValidAlertMessage = "";
+    },
+
+
+    secureEmailSend: function secureEmailSend() {
+      var self = this;
+      
+      function secureEmailSendCountDown() {
+        self.secureEmailSendSeconds --;
+        
+        self.secureEmailSendDisabled = true;
+        self.secureEmailSendText = "获取验证码" + "("+self.secureEmailSendSeconds+")";
+        
+        self.secureEmailSendTimeout = window.setTimeout(secureEmailSendCountDown, 1000);
+        
+        if (self.secureEmailSendSeconds <= 0) {
+          window.clearTimeout(self.secureEmailSendTimeout);
+          
+          self.secureEmailSendDisabled = false;
+          self.secureEmailSendText = "获取验证码";
+          self.secureEmailSendSeconds = 60;
+        }
+      }
+      
+      self.secureEmailSendDisabled = true;
+
+      var url = self.attestServerUrl + '/api/guard/secureemail/send';
+      var postdata = { "gid": self.gid };
+      
+      $.ajax({
+        type: "POST",
+        url: url,
+        contentType: 'application/json; charset=UTF-8',
+        data: JSON.stringify(postdata),
+        dataType: "json",
+        success: function success(r) {
+          console.log(url, r);
+
+          self.secureEmailSendDisabled = false;
+
+          if (r && r.code == 0) {
+            self.secureEmailValidShowAlert = true;
+            self.secureEmailValidAlertMessage = "已发送";
+            
+            secureEmailSendCountDown();
+          } else if (r && r.code != 0 && r.data.result == 'expired') {
+            self.securePhoneValidShowAlert = true;
+            self.securePhoneValidAlertMessage = "发送失败，已过期，请重新获取验证码";
+            
+            window.setTimeout(function () {
+              self.initGuard();
+            }, 500);
+          } else {
+            self.secureEmailValidShowAlert = true;
+            self.secureEmailValidAlertMessage = "发送失败";
+          }
+        },
+        error: function error(err) {
+          console.log(err);
+
+          self.secureEmailSendDisabled = false;
+          
+          self.secureEmailValidShowAlert = true;
+          self.secureEmailValidAlertMessage = "发送失败";
+        }
+      });
+    },
+    secureEmailValid: function secureEmailValid() {
+      var self = this;
+      
+      var url = self.attestServerUrl + '/api/guard/secureemail/valid';
+      var postdata = { "gid": self.gid, "code": self.secureEmailCode };
+      
+      $.ajax({
+        type: "POST",
+        url: url,
+        contentType: 'application/json; charset=UTF-8',
+        data: JSON.stringify(postdata),
+        dataType: "json",
+        success: function success(r) {
+          console.log(url, r);
+
+          if (r && r.code == 0) {
+            var status = r.data.status;
+            
+            if (status == 2) {
+              // self.clearSecureEmail();
+
+              window.setTimeout(function () {
+                submitFm1();
+              }, 500);
+            } else {
+              self.secureEmailValidShowAlert = true;
+              self.secureEmailValidAlertMessage = "验证失败";
+            }
+          }
+        },
+        error: function error(err) {
+          console.log(err);
+        }
+      });
+    },
+
+    clearSecureEmail: function clearSecureEmail() {
+      var self = this;
+
+      window.clearTimeout(self.secureEmailSendTimeout);
+      
+      self.secureEmailSendDisabled = false;
+      self.secureEmailSendText = "获取验证码";
+      self.secureEmailSendSeconds = 60;
+
+      self.secureEmailCode = '';
+      self.secureEmailValidShowAlert = false;
+      self.secureEmailValidAlertMessage = "";
+    },
+    
+
+    qrCodeInit: function qrCodeInit() {
+      var self = this;
+      
+      if (self.qrCode == null || self.qrCode.scanTypes == null || self.qrCode.scanTypes.length == 0) {
+        return;
+      }
+      
+      var scanTypeNames = "";
+      for (var i=0; i<self.qrCode.scanTypes.length; i++) {
+        var scanType = self.qrCode.scanTypes[i];
+        if (scanType == "superapp") {
+          scanTypeNames += "、"+superappName;
+        } else if (scanType == "qq") {
+          scanTypeNames += "、QQ";
+        } else if (scanType == "weixinmp") {
+          scanTypeNames += "、微信";
+        } else if (scanType == "workweixinh5") {
+          scanTypeNames += "、企业微信";
+        } else if (scanType == "dingtalkh5") {
+          scanTypeNames += "、钉钉";
+        }
+      }
+      if (scanTypeNames!="") {
+        scanTypeNames = scanTypeNames.substring(1);
+      }
+      
+      self.qrCodeScanTypeNames = scanTypeNames;
+      
+      self.qrCodeSend();
+    },
+    
+    qrCodeSend: function qrCodeSend() {
+      var self = this;
+
+      var url = self.attestServerUrl + '/api/guard/qrcode/send';
+      var postdata = { "gid": self.gid };
+      
+      $.ajax({
+        type: "POST",
+        url: url,
+        contentType: 'application/json; charset=UTF-8',
+        data: JSON.stringify(postdata),
+        dataType: "json",
+        success: function success(r) {
+          console.log(url, r);
+
+          if (r && r.code == 0 && r.data.scanQrcode) {
+            self.qrCodeStatusShowAlert = false;
+            self.qrCodeStatusAlertMessage = "";
+
+            self.qrCodeScanQrcode = r.data.scanQrcode;
+            self.qrCodeCallbackCode = r.data.callbackCode;
+
+            self.startQrCodeStatus();
+          } else {
+            
+            self.startQrCodeStatus();
+          }
+        },
+        error: function error(err) {
+          console.log(err);
+        }
+      });
+    },
+    
+    qrCodeRefresh: function qrCodeRefresh() {
+      var self = this;
+      
+      self.clearQrCode();
+      self.initGuard();
+    },
+
+    startQrCodeStatus: function startQrCodeStatus() {
+      var self = this;
+
+      window.clearTimeout(self.appPushStatusTimeout); // 定时
+      
+      /*
+       * status 
+       * 0 init 新建、初始化, 
+       * 1 sent 已发送、已扫码等, 
+       * 2 valid 验证通过, 
+       * 3 fail 验证失败, 
+       * 5 cancel 取消, 
+       * 8 scaned 已扫码
+       * 9 expired 已过期、不存在
+       */
+      function qrCodeStatus() {
+        var url = self.attestServerUrl + '/api/guard/qrcode/status';
+        var postdata = { "gid": self.gid };
+        
+        $.ajax({
+          type: "POST",
+          url: url,
+          contentType: 'application/json; charset=UTF-8',
+          data: JSON.stringify(postdata),
+          dataType: "json",
+          timeout: 1000,
+          success: function success(r) {
+            // console.log(url, r);
+            if (r && r.code == 0) {
+              var status = r.data.status;
+              
+              if (status == 0) {
+                
+                self.qrCodeScanSuccess = false;
+                self.qrCodeStatusShowAlert = false;
+                self.qrCodeStatusAlertMessage = "";
+              } else if (status == 1) {
+                
+                self.qrCodeScanSuccess = false;
+                self.qrCodeStatusShowAlert = false;
+                self.qrCodeStatusAlertMessage = "";
+              } else if (status == 2) {
+                
+                self.qrCodeScanSuccess = true;
+                self.qrCodeStatusShowAlert = true;
+                self.qrCodeStatusAlertMessage = "已确认";
+
+                window.clearTimeout(self.qrCodeStatusTimeout);
+                window.setTimeout(function () {
+                  submitFm1();
+                }, 500);
+              } else if (status == 3) {
+                
+                self.qrCodeScanSuccess = false;
+                self.qrCodeStatusShowAlert = true;
+                self.qrCodeStatusAlertMessage = "确认失败";
+                
+                window.clearTimeout(self.qrCodeStatusTimeout);
+              } else if (status == 5) {
+                
+                self.qrCodeScanSuccess = false;
+                self.qrCodeStatusShowAlert = true;
+                self.qrCodeStatusAlertMessage = "已拒绝";
+                
+                window.clearTimeout(self.qrCodeStatusTimeout);
+              } else if (status == 8) {
+                
+                self.qrCodeScanSuccess = true;
+                self.qrCodeStatusShowAlert = true;
+                self.qrCodeStatusAlertMessage = "已扫码，等待确认";
+              } else if (status == 9) {
+                
+                self.qrCodeScanSuccess = false;
+                self.qrCodeStatusShowAlert = true;
+                self.qrCodeStatusAlertMessage = "已失效，请重新发送";
+                
+                self.qrCodeCallbackCode = null;
+                
+                window.clearTimeout(self.qrCodeStatusTimeout);
+                
+                /* window.setTimeout(function () {
+                  self.initGuard();
+                }, 500); */
+                
+              }
+              
+            } else {
+              window.clearTimeout(self.qrCodeStatusTimeout);
+            }
+          },
+          error: function error(err) {
+            console.log(err);
+            window.clearTimeout(self.qrCodeStatusTimeout);
+          }
+        });
+        
+        self.qrCodeStatusTimeout = window.setTimeout(qrCodeStatus, 2000);
+      }
+      
+      self.qrCodeStatusTimeout = window.setTimeout(qrCodeStatus, 100);
+    },
+    
+    clearQrCode: function clearQrCode() {
+      var self = this;
+      
+      window.clearTimeout(self.qrCodeStatusTimeout);
+      
+      self.qrCodeScanQrcode = null;
+      self.qrCodeScanSuccess = false;
+      self.qrCodeStatusShowAlert = false;
+      self.qrCodeStatusAlertMessage = "";
+
+      self.qrCodeCallbackCode = null;
+    },
+    
+
+    faceVerifyInit: function faceVerifyInit() {
+      var self = this;
+      
+      self.faceVerifySend();
+    },
+    
+    faceVerifySend: function faceVerifySend() {
+      var self = this;
+
+      var url = self.attestServerUrl + '/api/guard/faceverify/send';
+      var postdata = { "gid": self.gid };
+      
+      $.ajax({
+        type: "POST",
+        url: url,
+        contentType: 'application/json; charset=UTF-8',
+        data: JSON.stringify(postdata),
+        dataType: "json",
+        success: function success(r) {
+          console.log(url, r);
+
+          if (r && r.code == 0 && r.data.scanFaceverify) {
+            self.faceVerifyStatusShowAlert = false;
+            self.faceVerifyStatusAlertMessage = "";
+
+            self.faceVerifyScanFaceverify = r.data.scanFaceverify;
+            self.faceVerifyCallbackCode = r.data.callbackCode;
+
+            self.startFaceVerifyStatus();
+          } else {
+            
+            self.startFaceVerifyStatus();
+          }
+        },
+        error: function error(err) {
+          console.log(err);
+        }
+      });
+    },
+    
+    faceVerifyRefresh: function faceVerifyRefresh() {
+      var self = this;
+      
+      self.clearFaceVerify();
+      self.initGuard();
+    },
+
+    startFaceVerifyStatus: function startFaceVerifyStatus() {
+      var self = this;
+
+      window.clearTimeout(self.appPushStatusTimeout); // 定时
+      
+      /*
+       * status 
+       * 0 init 新建、初始化, 
+       * 1 sent 已发送、已扫码等, 
+       * 2 valid 验证通过, 
+       * 3 fail 验证失败, 
+       * 5 cancel 取消, 
+       * 8 scaned 已扫码
+       * 9 expired 已过期、不存在
+       */
+      function faceVerifyStatus() {
+        var url = self.attestServerUrl + '/api/guard/faceverify/status';
+        var postdata = { "gid": self.gid };
+        
+        $.ajax({
+          type: "POST",
+          url: url,
+          contentType: 'application/json; charset=UTF-8',
+          data: JSON.stringify(postdata),
+          dataType: "json",
+          timeout: 1000,
+          success: function success(r) {
+            // console.log(url, r);
+            if (r && r.code == 0) {
+              var status = r.data.status;
+              
+              if (status == 0) {
+                
+                self.faceVerifyScanSuccess = false;
+                self.faceVerifyStatusShowAlert = false;
+                self.faceVerifyStatusAlertMessage = "";
+              } else if (status == 1) {
+                
+                self.faceVerifyScanSuccess = false;
+                self.faceVerifyStatusShowAlert = false;
+                self.faceVerifyStatusAlertMessage = "";
+              } else if (status == 2) {
+                
+                self.faceVerifyScanSuccess = true;
+                self.faceVerifyStatusShowAlert = true;
+                self.faceVerifyStatusAlertMessage = "人脸识别成功";
+
+                window.clearTimeout(self.faceVerifyStatusTimeout);
+                window.setTimeout(function () {
+                  submitFm1();
+                }, 500);
+              } else if (status == 3) {
+                
+                self.faceVerifyScanSuccess = false;
+                self.faceVerifyStatusShowAlert = true;
+                self.faceVerifyStatusAlertMessage = "人脸识别失败";
+                
+                window.clearTimeout(self.faceVerifyStatusTimeout);
+              
+              } else if (status == 11) {
+                
+                self.faceVerifyScanSuccess = true;
+                self.faceVerifyStatusShowAlert = true;
+                self.faceVerifyStatusAlertMessage = "人脸识别中…";
+              } else if (status == 9) {
+                
+                self.faceVerifyScanSuccess = false;
+                self.faceVerifyStatusShowAlert = true;
+                self.faceVerifyStatusAlertMessage = "已失效，请刷新二维码";
+                
+                self.faceVerifyCallbackCode = null;
+                
+                window.clearTimeout(self.faceVerifyStatusTimeout);
+                
+                /* window.setTimeout(function () {
+                  self.initGuard();
+                }, 500); */
+                
+              }
+              
+            } else {
+              window.clearTimeout(self.faceVerifyStatusTimeout);
+            }
+          },
+          error: function error(err) {
+            console.log(err);
+            window.clearTimeout(self.faceVerifyStatusTimeout);
+          }
+        });
+        
+        self.faceVerifyStatusTimeout = window.setTimeout(faceVerifyStatus, 2000);
+      }
+      
+      self.faceVerifyStatusTimeout = window.setTimeout(faceVerifyStatus, 100);
+    },
+    
+    clearFaceVerify: function clearFaceVerify() {
+      var self = this;
+      
+      window.clearTimeout(self.faceVerifyStatusTimeout);
+      
+      self.faceVerifyScanQrcode = null;
+      self.faceVerifyScanSuccess = false;
+      self.faceVerifyStatusShowAlert = false;
+      self.faceVerifyStatusAlertMessage = "";
+
+      self.faceVerifyCallbackCode = null;
+    },
+    
+    
+  }
+});
+</script>
+
+
+<script type="text/javascript">
+
+                        var i_login = "\u7A0D\u7B49\u7247\u523B\u2026\u2026";
+                        $( document ).ready(function() {
+                          
+                            $("#fm1").submit(function () {
+                              var username = $("#fm1").find("#username").val();
+                              var password = $("#fm1").find("#password").val();
+                              if (username == null || username == '') {
+                                $("#showErrorMessageUsername").click();
+                                return false;
+                              }
+
+                              if (password == null || password == '') {
+                                $("#showErrorMessagePassword").click();
+                                return false;
+                              }
+
+                              if (mfaEnabled) {
+                                var mfaState = $("#fm1").find('[name="mfaState"]').val();
+                                if (mfaState == null || mfaState == '') {
+                                  mfaDetect();
+                                  return false;
+                                }
+                              }
+                              
+                              // 前端密码加密
+                              if (encryptEnabled && password.indexOf('__RSA__') < 0) {
+                                var encodedPassword = "__RSA__"+encrypt.encrypt(password);
+                                $("#fm1").find("#password").val(encodedPassword);
+                              }
+                              
+                                //$("#fm1").find(":submit").attr("disabled", true);
+                                //$("#fm1").find(":submit").attr("value", i_login);
+                                //console.log(i_login);
+                                
+                                // 处理记住密码
+                                doRememberPassword(username, password);
+                                
+                                doLogin();
+                                return true;
+                            });
+
+                            $("#fm2").submit(function () {
+                              var mobile = $("#fm2").find("#username").val();
+                              var dynamiccode = $("#fm2").find("#password").val();
+                              if (mobile == null || mobile == '') {
+                                $("#showErrorMessageMobile").click();
+                                return false;
+                              }
+                              if (!mobilePattern.test(mobile)) {
+                                $("#showErrorMessageMobile").click();
+                                return false;
+                              }
+
+                              if (dynamiccode == null || dynamiccode == '') {
+                                $("#showErrorMessageDynamicCode").click();
+                                return false;
+                              }
+
+                                //$("#fm2").find(":submit").attr("disabled", true);
+                                //$("#fm2").find(":submit").attr("value", i_login);
+                                //console.log(i_login);
+                                
+                                doLogin();
+                                return true;
+                            });
+                        });
+                    </script>
+
+                    <script type="text/javascript">
+                        function refreshCaptchaInMenu(currentMenu) {
+                          refreshCaptcha($("#fm"+currentMenu+"Input").find("#captcha_img"));
+                        }
+                        function refreshCaptcha(obj) { // console.log(obj);
+                          var captcha_img = $(obj);
+                          var captcha_container = captcha_img.parents("div.captcha-input-container");
+                          captcha_container.find("#captcha_img").attr("src", "\/cas\/captcha.jpg"+"?r=" + (new Date()).getTime() + Math.floor(Math.random()*24));
+                          captcha_container.find("#captcha").val("");
+                          captcha_container.find("#captcha").focus();
+                        }
+                        function togglePassword(obj) {
+                          var $obj = $(obj);
+                          
+                          var $password = $(obj).parents('.sw-input').find("#password");
+                          
+                          if ($password.attr('type') == 'password') {
+                            $password.attr('type', 'text');
+                            $obj.removeClass('su-icon-hide').addClass('su-icon-display');
+                          } else {
+                            $password.attr('type', 'password');
+                            $obj.removeClass('su-icon-display').addClass('su-icon-hide');
+                          }
+                        }
+                    </script>
+
+
+  
+  <script type="text/javascript">
+  $( document ).ready(function() {
+    var location = self.document.location;
+    var hash = decodeURIComponent(location.hash);
+    
+    if (hash != undefined && hash != '' && hash.indexOf('#') === -1) {
+        hash = '#' + hash;
+    }
+    
+    var action = location.href;
+  
+    /* var action = $('#fm1').attr('action');
+    if (action == undefined) {
+        action = location.href;
+    } else {
+        var qidx = location.href.indexOf('?');
+        if (qidx != -1) {
+            var queryParams = location.href.substring(qidx);
+            action += queryParams;
+        }
+    } */
+    action += hash;
+    
+    $('#fm1').attr('action', action);
+    $('#fm2').attr('action', action);
+    $('#fm3').attr('action', action);
+
+    $('#fm9').attr('action', action);
+
+    initRememberPassword();
+  });
+  </script>
+
+  <script type="text/javascript">
+  function submitByEnter(event, fmId) {
+    if(event.which === 13 || event.keyCode === 13) {
+      $(fmId).find('[name="button"]').click();
+    }
+  }
+  $( document ).ready(function() {
+    $("#fm1Input").find("#username").keyup(function(event){
+      submitByEnter(event, "#fm1Input");
+    });
+    $("#fm1Input").find("#password").keyup(function(event){
+      submitByEnter(event, "#fm1Input");
+    });
+    $("#fm1Input").find("#captcha").keyup(function(event){
+      submitByEnter(event, "#fm1Input");
+    });
+    $("#fm2Input").find("#mobile").keyup(function(event){
+      submitByEnter(event, "#fm2Input");
+    });
+    $("#fm2Input").find("#dynamiccode").keyup(function(event){
+      submitByEnter(event, "#fm2Input");
+    });
+  });
+  </script>
+
+  <script type="text/javascript">
+  /* $( document ).ready(function() {
+    $(".el-carousel__container").css({"max-height":"1080px", "min-height":"660px"});
+  }); */
+  </script>
+
+    </div>
+</main>
+
+
+
+
+
+<script type="text/javascript">
+function back() {
+  window.location.href = "\/cas\/login" + window.location.search;
+}
+</script>
+
+<script src="/cas/deps/js/fingerprintjs/v3/iife.min.js"></script>
+<script>
+$( document ).ready(function() {
+  var fpVisitorId = (localStorage.fpVisitorId || "");
+  if (fpVisitorId == "") {
+    var fpPromise = FingerprintJS.load();
+    fpPromise
+      .then(function (fp) { return fp.get() })
+      .then(function (result) {
+        // Handle the result
+        //console.log(result)
+        localStorage.fpVisitorId = result.visitorId;
+        $('[name="fpVisitorId"]').val(result.visitorId);
+      });
+  } else {
+    $('[name="fpVisitorId"]').val(fpVisitorId);
+  }
+});
+</script>
+
+</body>
+</html>

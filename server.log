@@ -1,0 +1,15 @@
+INFO:     Will watch for changes in these directories: ['D:\\ClaudeCode_Test\\course-schedule']
+INFO:     Uvicorn running on http://127.0.0.1:8003 (Press CTRL+C to quit)
+INFO:     Started reloader process [82180] using StatReload
+INFO:     Started server process [82208]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:64102 - "GET /api/current-semester HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51056 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51056 - "GET /api/current-semester HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62231 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:51056 - "GET /api/schedule?week=1&semester_id=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52393 - "POST /api/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60687 - "POST /api/login/mfa HTTP/1.1" 401 Unauthorized
+WARNING:  StatReload detected changes in 'scraper.py'. Reloading...
+ INFO:     127.0.0.1:61123 - "GET /api/current-semester HTTP/1.1" 200 OK

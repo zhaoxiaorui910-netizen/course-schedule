@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.ruff_cache/
+
+# 数据库（正式 + 测试）
+schedule.db
+test.db
+
+# 桌面封装中间产物
+logo.ico
+
+# 调试产物
+debug_login/
+
+# 构建产物
+dist/
+*.spec
+
+# 系统文件
+Thumbs.db
+.DS_Store
